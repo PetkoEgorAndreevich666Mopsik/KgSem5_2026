@@ -1533,6 +1533,13 @@ void DirectXApp::Update(const GameTimer& gt) {
     mF2WasDown = num4Down;
     mF3WasDown = num5Down;
 
+    const bool vDown = (GetAsyncKeyState('V') & 0x8000) != 0;
+    if (vDown && !mCascadeVizWasDown) {
+        mCascadeVizEnabled = !mCascadeVizEnabled;
+        titleDirty = true;
+    }
+    mCascadeVizWasDown = vDown;
+
     if (num6Down && !mBWasDown) {
         mFallingBallsEnabled = !mFallingBallsEnabled;
         if (!mFallingBallsEnabled) {
@@ -1752,6 +1759,7 @@ void DirectXApp::Update(const GameTimer& gt) {
     XMFLOAT3 lightDirStorage;
     XMStoreFloat3(&lightDirStorage, XMLoadFloat3(&mLights[0].Direction));
     shadow.LightDirection = XMFLOAT4(lightDirStorage.x, lightDirStorage.y, lightDirStorage.z, 0.0f);
+    shadow.DebugInfo = XMFLOAT4(mCascadeVizEnabled ? 1.0f : 0.0f, 0.0f, 0.0f, 1.0f);
 
     mShadowCB->CopyData(0, shadow);
 }

@@ -40,4 +40,5 @@ struct ShadowConstants {
     XMFLOAT4X4 LightViewProj[3];
     XMFLOAT4 CascadeSplits;
     XMFLOAT4 LightDirection;
+    XMFLOAT4 DebugInfo;
 };

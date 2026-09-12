@@ -37,11 +37,17 @@ cbuffer ShadowConstants : register(b2)
     float4x4 gLightViewProj[3];
     float4 gCascadeSplits;
     float4 gLightDirection;
+    float4 gDebugInfo;
 };
 
 static const int kNumCascades = 3;
 static const float kShadowMapSize = 1024.0f;
 static const float kBias = 0.0005f;
+static const float3 kCascadeColors[3] = {
+    float3(1.0f, 0.41f, 0.71f),
+    float3(1.0f, 0.0f, 0.0f),
+    float3(0.0f, 1.0f, 0.0f)
+};
 
 struct VSOut
 {
@@ -112,9 +118,9 @@ float3 ComputeSpot(float3 P, float3 N, float3 albedo, LightData light)
     return albedo * light.Color * (light.Intensity * ndotl * atten * spot);
 }
 
-float ComputeShadowFactor(float3 worldPos, float3 normalW, float viewDepth)
+float ComputeShadowFactor(float3 worldPos, float3 normalW, float viewDepth, out int cascadeIndex)
 {
-    int cascadeIndex = kNumCascades - 1;
+    cascadeIndex = kNumCascades - 1;
     for (int i = 0; i < kNumCascades - 1; ++i)
     {
         if (viewDepth < gCascadeSplits[i])
@@ -193,8 +199,14 @@ float4 PS_Lighting(VSOut pin) : SV_Target
             const float nearZ = 0.1f;
             const float farZ = 260.0f;
             float viewDepth = nearZ * farZ / (farZ - depth * (farZ - nearZ));
-            float shadow = ComputeShadowFactor(worldPos, normalW, viewDepth);
+            int cascadeIndex = 0;
+            float shadow = ComputeShadowFactor(worldPos, normalW, viewDepth, cascadeIndex);
             color *= shadow;
+
+            if (gDebugInfo.x > 0.5f)
+            {
+                color = kCascadeColors[cascadeIndex] * (0.6f + 0.4f * shadow);
+            }
         }
     }
 

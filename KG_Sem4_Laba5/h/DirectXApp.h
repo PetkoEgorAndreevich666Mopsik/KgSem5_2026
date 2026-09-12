@@ -208,6 +208,8 @@ private:
     bool mRWasDown = false;
     bool mCWasDown = false;
     bool mOWasDown = false;
+    bool mCascadeVizWasDown = false;
+    bool mCascadeVizEnabled = false;
     bool mFrustumCullingEnabled = true;
     bool mOctreeCullingEnabled = true;
     unsigned int mLastVisibleObjectCount = 0;
