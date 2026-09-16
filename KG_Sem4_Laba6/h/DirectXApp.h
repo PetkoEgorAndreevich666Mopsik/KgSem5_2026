@@ -163,6 +163,7 @@ private:
     std::unique_ptr<RenderingSystem> mRenderingSystem;
 
     MeshData mSceneMesh;
+    MeshData mParticleMesh;
     BoundingSphere mModelBounds = {};
     std::vector<SceneObject> mSceneObjects;
     std::vector<OctreeNode> mOctreeNodes;
@@ -171,9 +172,16 @@ private:
     ComPtr<ID3D12Resource> mVertexBufferUploader;
     ComPtr<ID3D12Resource> mIndexBufferGPU;
     ComPtr<ID3D12Resource> mIndexBufferUploader;
+    ComPtr<ID3D12Resource> mParticleVertexBufferGPU;
+    ComPtr<ID3D12Resource> mParticleVertexBufferUploader;
+    ComPtr<ID3D12Resource> mParticleIndexBufferGPU;
+    ComPtr<ID3D12Resource> mParticleIndexBufferUploader;
 
     D3D12_VERTEX_BUFFER_VIEW mVertexBufferView = {};
     D3D12_INDEX_BUFFER_VIEW mIndexBufferView = {};
+    D3D12_VERTEX_BUFFER_VIEW mParticleVertexBufferView = {};
+    D3D12_INDEX_BUFFER_VIEW mParticleIndexBufferView = {};
+    unsigned int mParticleMeshIndexCount = 0;
 
     std::vector<TextureResource> mTextureResources;
     std::unordered_map<std::string, unsigned int> mTextureNameToIndex;

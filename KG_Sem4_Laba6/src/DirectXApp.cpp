@@ -20,6 +20,7 @@
 #include <sstream>
 #include <iomanip>
 #include <stdexcept>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 #include <fstream>
@@ -52,6 +53,165 @@ void AppendMeshData(MeshData& dst, const MeshData& src) {
         sm.baseVertexLocation = 0;
         dst.submeshes.push_back(sm);
     }
+}
+
+void NormalizeMeshToRadius(MeshData& mesh, float targetRadius) {
+    if (mesh.vertices.empty()) {
+        return;
+    }
+
+    XMFLOAT3 vMin(
+        std::numeric_limits<float>::max(),
+        std::numeric_limits<float>::max(),
+        std::numeric_limits<float>::max());
+    XMFLOAT3 vMax(
+        -std::numeric_limits<float>::max(),
+        -std::numeric_limits<float>::max(),
+        -std::numeric_limits<float>::max());
+
+    for (const auto& v : mesh.vertices) {
+        vMin.x = (std::min)(vMin.x, v.Position.x);
+        vMin.y = (std::min)(vMin.y, v.Position.y);
+        vMin.z = (std::min)(vMin.z, v.Position.z);
+        vMax.x = (std::max)(vMax.x, v.Position.x);
+        vMax.y = (std::max)(vMax.y, v.Position.y);
+        vMax.z = (std::max)(vMax.z, v.Position.z);
+    }
+
+    const XMFLOAT3 center(
+        0.5f * (vMin.x + vMax.x),
+        0.5f * (vMin.y + vMax.y),
+        0.5f * (vMin.z + vMax.z));
+
+    float radius = 0.0f;
+    for (const auto& v : mesh.vertices) {
+        const float dx = v.Position.x - center.x;
+        const float dy = v.Position.y - center.y;
+        const float dz = v.Position.z - center.z;
+        radius = (std::max)(radius, std::sqrt(dx * dx + dy * dy + dz * dz));
+    }
+
+    const float scale = (radius > 1e-4f) ? (targetRadius / radius) : 1.0f;
+    for (auto& v : mesh.vertices) {
+        v.Position.x = (v.Position.x - center.x) * scale;
+        v.Position.y = (v.Position.y - center.y) * scale;
+        v.Position.z = (v.Position.z - center.z) * scale;
+    }
+}
+
+struct ObjVertexKey {
+    int Position = -1;
+    int TexCoord = -1;
+    int Normal = -1;
+};
+
+ObjVertexKey ParseObjVertexKey(const std::string& token) {
+    ObjVertexKey key;
+    size_t start = 0;
+    int part = 0;
+
+    while (start <= token.size() && part < 3) {
+        const size_t slash = token.find('/', start);
+        const size_t end = (slash == std::string::npos) ? token.size() : slash;
+        if (end > start) {
+            const int objIndex = std::stoi(token.substr(start, end - start));
+            const int zeroBased = objIndex > 0 ? objIndex - 1 : objIndex;
+            if (part == 0) {
+                key.Position = zeroBased;
+            } else if (part == 1) {
+                key.TexCoord = zeroBased;
+            } else {
+                key.Normal = zeroBased;
+            }
+        }
+
+        if (slash == std::string::npos) {
+            break;
+        }
+        start = slash + 1;
+        ++part;
+    }
+
+    return key;
+}
+
+std::string MakeObjVertexCacheKey(const ObjVertexKey& key) {
+    return std::to_string(key.Position) + "/" + std::to_string(key.TexCoord) + "/" + std::to_string(key.Normal);
+}
+
+MeshData LoadParticleObjMesh(const std::filesystem::path& filePath) {
+    std::ifstream file(filePath);
+    if (!file) {
+        throw std::runtime_error("Failed to open particle OBJ mesh: " + filePath.string());
+    }
+
+    std::vector<XMFLOAT3> positions;
+    std::vector<XMFLOAT3> normals;
+    std::vector<XMFLOAT2> texcoords;
+    std::unordered_map<std::string, unsigned int> vertexCache;
+    MeshData mesh;
+
+    std::string line;
+    while (std::getline(file, line)) {
+        std::istringstream lineStream(line);
+        std::string type;
+        lineStream >> type;
+
+        if (type == "v") {
+            XMFLOAT3 p;
+            lineStream >> p.x >> p.y >> p.z;
+            positions.push_back(p);
+        } else if (type == "vn") {
+            XMFLOAT3 n;
+            lineStream >> n.x >> n.y >> n.z;
+            normals.push_back(n);
+        } else if (type == "vt") {
+            XMFLOAT2 uv;
+            lineStream >> uv.x >> uv.y;
+            uv.y = 1.0f - uv.y;
+            texcoords.push_back(uv);
+        } else if (type == "f") {
+            std::vector<unsigned int> faceIndices;
+            std::string token;
+
+            while (lineStream >> token) {
+                const ObjVertexKey key = ParseObjVertexKey(token);
+                if (key.Position < 0 || key.Position >= static_cast<int>(positions.size())) {
+                    continue;
+                }
+
+                const std::string cacheKey = MakeObjVertexCacheKey(key);
+                auto found = vertexCache.find(cacheKey);
+                if (found == vertexCache.end()) {
+                    Vertex vertex;
+                    vertex.Position = positions[static_cast<size_t>(key.Position)];
+                    if (key.Normal >= 0 && key.Normal < static_cast<int>(normals.size())) {
+                        vertex.Normal = normals[static_cast<size_t>(key.Normal)];
+                    }
+                    if (key.TexCoord >= 0 && key.TexCoord < static_cast<int>(texcoords.size())) {
+                        vertex.TexC = texcoords[static_cast<size_t>(key.TexCoord)];
+                    }
+
+                    const unsigned int vertexIndex = static_cast<unsigned int>(mesh.vertices.size());
+                    mesh.vertices.push_back(vertex);
+                    found = vertexCache.emplace(cacheKey, vertexIndex).first;
+                }
+
+                faceIndices.push_back(found->second);
+            }
+
+            for (size_t i = 1; i + 1 < faceIndices.size(); ++i) {
+                mesh.indices.push_back(faceIndices[0]);
+                mesh.indices.push_back(faceIndices[i]);
+                mesh.indices.push_back(faceIndices[i + 1]);
+            }
+        }
+    }
+
+    Submesh submesh;
+    submesh.indexCount = static_cast<unsigned int>(mesh.indices.size());
+    mesh.submeshes.push_back(submesh);
+    return mesh;
 }
 
 template<typename TObject>
@@ -698,12 +858,23 @@ void DirectXApp::BuildScene() {
 
     mVertexBufferUploader.Reset();
     mIndexBufferUploader.Reset();
+    mParticleVertexBufferUploader.Reset();
+    mParticleIndexBufferUploader.Reset();
 
     ResetParticles();
 }
 
 void DirectXApp::LoadModels() {
     mSceneMesh = {};
+    mParticleMesh = {};
+    mParticleMeshIndexCount = 0;
+
+    const std::filesystem::path particleModelPath = "../assets/Monkey.obj";
+    if (std::filesystem::exists(particleModelPath)) {
+        mParticleMesh = LoadParticleObjMesh(particleModelPath);
+        NormalizeMeshToRadius(mParticleMesh, 1.0f);
+        mParticleMeshIndexCount = static_cast<unsigned int>(mParticleMesh.indices.size());
+    }
 
     std::filesystem::path modelPath;
     if (mCurrentScene == 0) {
@@ -1061,6 +1232,33 @@ void DirectXApp::BuildGeometryBuffers() {
     mIndexBufferView.BufferLocation = mIndexBufferGPU->GetGPUVirtualAddress();
     mIndexBufferView.Format = DXGI_FORMAT_R32_UINT;
     mIndexBufferView.SizeInBytes = ibByteSize;
+
+    if (!mParticleMesh.vertices.empty() && !mParticleMesh.indices.empty()) {
+        const UINT particleVbByteSize = static_cast<UINT>(mParticleMesh.vertices.size() * sizeof(Vertex));
+        const UINT particleIbByteSize = static_cast<UINT>(mParticleMesh.indices.size() * sizeof(unsigned int));
+
+        mParticleVertexBufferGPU = CreateDefaultBuffer(
+            mDevice.Get(),
+            mCommandList.Get(),
+            mParticleMesh.vertices.data(),
+            particleVbByteSize,
+            mParticleVertexBufferUploader);
+
+        mParticleIndexBufferGPU = CreateDefaultBuffer(
+            mDevice.Get(),
+            mCommandList.Get(),
+            mParticleMesh.indices.data(),
+            particleIbByteSize,
+            mParticleIndexBufferUploader);
+
+        mParticleVertexBufferView.BufferLocation = mParticleVertexBufferGPU->GetGPUVirtualAddress();
+        mParticleVertexBufferView.StrideInBytes = sizeof(Vertex);
+        mParticleVertexBufferView.SizeInBytes = particleVbByteSize;
+
+        mParticleIndexBufferView.BufferLocation = mParticleIndexBufferGPU->GetGPUVirtualAddress();
+        mParticleIndexBufferView.Format = DXGI_FORMAT_R32_UINT;
+        mParticleIndexBufferView.SizeInBytes = particleIbByteSize;
+    }
 }
 
 void DirectXApp::LoadTextures() {
@@ -2126,9 +2324,12 @@ void DirectXApp::Draw(const GameTimer& gt) {
         ++lightCbIndex;
     }
 
-    ExecuteParticleSimulation(mCommandList.Get());
+    if (mParticlesEnabled) {
+        ExecuteParticleSimulation(mCommandList.Get());
 
-    DrawParticles(mCommandList.Get(), view, proj);
+        mCommandList->OMSetRenderTargets(1, &rtv, TRUE, &dsv);
+        DrawParticles(mCommandList.Get(), view, proj);
+    }
 
     auto bbToPresent = CD3DX12_RESOURCE_BARRIER::Transition(
         CurrentBackBuffer(),
@@ -2351,7 +2552,7 @@ void DirectXApp::UpdateParticles(float dt, float totalTime) {
     sim.AliveCount = mParticleAliveCount;
     sim.SpawnCount = mParticleSpawnCount;
     sim.EmitterPos = XMFLOAT3(0.0f, 5.0f, 0.0f);
-    sim.BaseSize = 0.18f;
+    sim.BaseSize = 0.24f;
     sim.EmitterVelocity = XMFLOAT3(0.0f, 0.0f, 0.0f);
     sim.Gravity = 9.8f;
     sim.LifeMin = 2.0f;
@@ -2445,7 +2646,8 @@ void DirectXApp::ExecuteParticleSimulation(ID3D12GraphicsCommandList* cmdList) {
 }
 
 void DirectXApp::DrawParticles(ID3D12GraphicsCommandList* cmdList, const XMMATRIX& view, const XMMATRIX& proj) {
-    if (mParticleAliveCount == 0u || !cmdList || !mParticleRenderCB) {
+    if (mParticleAliveCount == 0u || !cmdList || !mParticleRenderCB ||
+        !mParticleVertexBufferGPU || !mParticleIndexBufferGPU || mParticleMeshIndexCount == 0u) {
         return;
     }
 
@@ -2457,27 +2659,17 @@ void DirectXApp::DrawParticles(ID3D12GraphicsCommandList* cmdList, const XMMATRI
         mParticleBufferStates[sourceIndex],
         D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 
-    const XMVECTOR forward = XMVector3Normalize(XMVectorSet(
-        std::cos(mPitch) * std::sin(mYaw),
-        std::sin(mPitch),
-        std::cos(mPitch) * std::cos(mYaw),
-        0.0f));
-    const XMVECTOR worldUp = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
-    const XMVECTOR right = XMVector3Normalize(XMVector3Cross(worldUp, forward));
-    const XMVECTOR up = XMVector3Normalize(XMVector3Cross(forward, right));
-
     ParticleRenderConstants render = {};
     XMStoreFloat4x4(&render.ViewProj, XMMatrixTranspose(view * proj));
-    XMStoreFloat3(&render.CameraRight, right);
-    XMStoreFloat3(&render.CameraUp, up);
     render.RenderSizeScale = 1.0f;
-    render.AlphaDiscard = 0.5f;
     mParticleRenderCB->CopyData(0, render);
 
     cmdList->SetPipelineState(mRenderingSystem->GetParticlePSO());
     cmdList->SetGraphicsRootSignature(mRenderingSystem->GetParticleRootSignature());
     cmdList->SetGraphicsRootDescriptorTable(0, GetGpuSrvHandle(mParticleSrvIndex + sourceIndex));
     cmdList->SetGraphicsRootConstantBufferView(4, mParticleRenderCB->Resource()->GetGPUVirtualAddress());
-    cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
-    cmdList->DrawInstanced(mParticleAliveCount, 1, 0, 0);
+    cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    cmdList->IASetVertexBuffers(0, 1, &mParticleVertexBufferView);
+    cmdList->IASetIndexBuffer(&mParticleIndexBufferView);
+    cmdList->DrawIndexedInstanced(mParticleMeshIndexCount, mParticleAliveCount, 0, 0, 0);
 }

@@ -44,10 +44,10 @@ cbuffer ParticleSimConstants : register(b0)
 cbuffer ParticleRenderConstants : register(b1)
 {
     float4x4 gViewProj;
-    float3 gCameraRight;
+    float3 gUnused0;
     float gRenderSizeScale;
-    float3 gCameraUp;
-    float gAlphaDiscard;
+    float3 gUnused1;
+    float gUnused2;
 };
 
 float Hash01(uint n)
@@ -142,81 +142,48 @@ void CS_UpdateParticles(uint3 dispatchThreadId : SV_DispatchThreadID)
 
 struct VSOut
 {
-    float3 CenterW : POSITION;
-    float Size : PSIZE;
+    float4 PosH : SV_POSITION;
+    float3 NormalW : NORMAL;
     float4 Color : COLOR0;
 };
 
-VSOut VS_Particle(uint vertexId : SV_VertexID)
+struct VSInput
 {
-    ParticleGpu p = gParticleSrv[vertexId];
+    float3 PosL : POSITION;
+    float3 NormalL : NORMAL;
+    float3 TangentL : TANGENT;
+    float3 BitangentL : BINORMAL;
+    float2 TexC : TEXCOORD;
+};
+
+float3 RotateY(float3 p, float angle)
+{
+    const float s = sin(angle);
+    const float c = cos(angle);
+    return float3(p.x * c + p.z * s, p.y, -p.x * s + p.z * c);
+}
+
+VSOut VS_Particle(VSInput vin, uint instanceId : SV_InstanceID)
+{
+    ParticleGpu p = gParticleSrv[instanceId];
 
     float lifeT = 1.0f - saturate(p.Age / max(p.Lifetime, 1e-4f));
+    const float yaw = p.Age * 3.0f + p.Position.x * 1.7f + p.Position.z * 0.9f;
+    const float scale = p.Size * gRenderSizeScale;
+    const float3 posW = RotateY(vin.PosL * scale, yaw) + p.Position;
+    const float3 normalW = normalize(RotateY(vin.NormalL, yaw));
+
     VSOut vout;
-    vout.CenterW = p.Position;
-    vout.Size = p.Size * gRenderSizeScale;
+    vout.PosH = mul(float4(posW, 1.0f), gViewProj);
+    vout.NormalW = normalW;
     vout.Color = float4(p.Color.rgb, lifeT);
     return vout;
 }
 
-struct GSOut
+float4 PS_Particle(VSOut pin) : SV_Target
 {
-    float4 PosH : SV_POSITION;
-    float4 Color : COLOR0;
-    noperspective float2 UV : TEXCOORD0;
-};
-
-[maxvertexcount(6)]
-void GS_Particle(point VSOut input[1], inout TriangleStream<GSOut> triStream)
-{
-    const VSOut p = input[0];
-    const float3 center = p.CenterW;
-    const float3 halfRight = gCameraRight * p.Size;
-    const float3 halfUp = gCameraUp * p.Size;
-
-    const float3 p0 = center - halfRight - halfUp;
-    const float3 p1 = center - halfRight + halfUp;
-    const float3 p2 = center + halfRight + halfUp;
-    const float3 p3 = center + halfRight - halfUp;
-
-    GSOut outV;
-    outV.Color = p.Color;
-
-    outV.PosH = mul(float4(p0, 1.0f), gViewProj);
-    outV.UV = float2(0.0f, 1.0f);
-    triStream.Append(outV);
-
-    outV.PosH = mul(float4(p1, 1.0f), gViewProj);
-    outV.UV = float2(0.0f, 0.0f);
-    triStream.Append(outV);
-
-    outV.PosH = mul(float4(p2, 1.0f), gViewProj);
-    outV.UV = float2(1.0f, 0.0f);
-    triStream.Append(outV);
-    triStream.RestartStrip();
-
-    outV.PosH = mul(float4(p0, 1.0f), gViewProj);
-    outV.UV = float2(0.0f, 1.0f);
-    triStream.Append(outV);
-
-    outV.PosH = mul(float4(p2, 1.0f), gViewProj);
-    outV.UV = float2(1.0f, 0.0f);
-    triStream.Append(outV);
-
-    outV.PosH = mul(float4(p3, 1.0f), gViewProj);
-    outV.UV = float2(1.0f, 1.0f);
-    triStream.Append(outV);
-    triStream.RestartStrip();
-}
-
-float4 PS_Particle(GSOut pin) : SV_Target
-{
-    const float2 d = pin.UV - float2(0.5f, 0.5f);
-    const float r = length(d);
-    if (r > gAlphaDiscard)
-    {
-        discard;
-    }
-
-    return float4(pin.Color.rgb, 1.0f);
+    const float3 lightDir = normalize(float3(-0.35f, 0.8f, -0.45f));
+    const float ndotl = saturate(dot(normalize(pin.NormalW), lightDir));
+    const float shade = 0.35f + ndotl * 0.65f;
+    return float4(pin.Color.rgb * shade, 1.0f);
 }

@@ -317,15 +317,13 @@ void RenderingSystem::BuildPSOs(ID3D12Device* device) {
                   "Create shadow PSO failed");
 
     auto vsParticle = d3dUtil::CompileShader(L"src/particles.hlsl", nullptr, "VS_Particle", "vs_5_0");
-    auto gsParticle = d3dUtil::CompileShader(L"src/particles.hlsl", nullptr, "GS_Particle", "gs_5_0");
     auto psParticle = d3dUtil::CompileShader(L"src/particles.hlsl", nullptr, "PS_Particle", "ps_5_0");
     auto csParticleUpdate = d3dUtil::CompileShader(L"src/particles.hlsl", nullptr, "CS_UpdateParticles", "cs_5_0");
 
     D3D12_GRAPHICS_PIPELINE_STATE_DESC particleDesc = {};
-    particleDesc.InputLayout = {nullptr, 0};
+    particleDesc.InputLayout = {inputLayout.data(), static_cast<UINT>(inputLayout.size())};
     particleDesc.pRootSignature = mParticleRootSignature.Get();
     particleDesc.VS = {vsParticle->GetBufferPointer(), vsParticle->GetBufferSize()};
-    particleDesc.GS = {gsParticle->GetBufferPointer(), gsParticle->GetBufferSize()};
     particleDesc.PS = {psParticle->GetBufferPointer(), psParticle->GetBufferSize()};
     particleDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
     particleDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
@@ -337,7 +335,7 @@ void RenderingSystem::BuildPSOs(ID3D12Device* device) {
     particleDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
     particleDesc.DepthStencilState.StencilEnable = FALSE;
     particleDesc.SampleMask = UINT_MAX;
-    particleDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT;
+    particleDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
     particleDesc.NumRenderTargets = 1;
     particleDesc.RTVFormats[0] = mBackBufferFormat;
     particleDesc.DSVFormat = mDepthStencilFormat;
