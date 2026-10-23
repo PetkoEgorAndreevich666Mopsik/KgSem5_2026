@@ -1,0 +1,4 @@
+"C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\bin\cmake.exe" -DCMAKE_BUILD_TYPE=Debug -G "NMake Makefiles" -S D:\KgSem4_2026\KG_Sem4_Laba8 -B D:\KgSem4_2026\KG_Sem4_Laba8\cmake-build-debug
+-- Configuring done (0.0s)
+-- Generating done (0.1s)
+-- Build files have been written to: D:/KgSem4_2026/KG_Sem4_Laba8/cmake-build-debug

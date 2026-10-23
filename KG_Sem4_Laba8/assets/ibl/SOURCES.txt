@@ -1,0 +1,14 @@
+Environment: Papermill, from the Khronos glTF Sample Environments collection.
+https://github.com/KhronosGroup/glTF-Sample-Environments
+Original panorama: http://www.hdrlabs.com/sibl/archive/
+
+irradiance.dds: precomputed Lambertian convolution, RGBA16F cubemap.
+prefilter.dds: precomputed GGX convolution, RGBA16F cubemap, 11 mip levels.
+The source KTX2 files are retained; tools/convert_ibl.py converts their layout to DDS without changing values.
+brdf.dds: RG16F split-sum BRDF integration, 256 x 256, 1024 Hammersley samples per texel.
+Regenerate with tools/integrate_brdf.py (Python + NumPy).
+
+Implementation references:
+https://learnopengl.com/PBR/Lighting
+https://learnopengl.com/PBR/IBL/Specular-IBL
+https://github.com/KhronosGroup/glTF-IBL-Sampler

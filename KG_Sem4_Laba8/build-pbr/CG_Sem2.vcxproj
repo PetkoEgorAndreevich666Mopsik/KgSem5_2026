@@ -1,0 +1,371 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <PreferredToolArchitecture>x64</PreferredToolArchitecture>
+  </PropertyGroup>
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="MinSizeRel|x64">
+      <Configuration>MinSizeRel</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="RelWithDebInfo|x64">
+      <Configuration>RelWithDebInfo</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{CF0B8806-4173-37C4-A009-C483EE235557}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <WindowsTargetPlatformVersion>10.0.26100.0</WindowsTargetPlatformVersion>
+    <Platform>x64</Platform>
+    <ProjectName>CG_Sem2</ProjectName>
+    <VCProjectUpgraderObjectName>NoUpgrade</VCProjectUpgraderObjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.20506.1</_ProjectFileVersion>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">D:\KgSem4_2026\KG_Sem4_Laba8\build-pbr\Debug\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">CG_Sem2.dir\Debug\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">CG_Sem2</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.exe</TargetExt>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</LinkIncremental>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</GenerateManifest>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\KgSem4_2026\KG_Sem4_Laba8\build-pbr\Release\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">CG_Sem2.dir\Release\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">CG_Sem2</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.exe</TargetExt>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkIncremental>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</GenerateManifest>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">D:\KgSem4_2026\KG_Sem4_Laba8\build-pbr\MinSizeRel\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">CG_Sem2.dir\MinSizeRel\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">CG_Sem2</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">.exe</TargetExt>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkIncremental>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">true</GenerateManifest>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">D:\KgSem4_2026\KG_Sem4_Laba8\build-pbr\RelWithDebInfo\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">CG_Sem2.dir\RelWithDebInfo\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">CG_Sem2</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">.exe</TargetExt>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</LinkIncremental>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</GenerateManifest>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>C:\assimp\assimp-6.0.5\include;C:\assimp\assimp-6.0.5\build\include;D:\KgSem4_2026\KG_Sem4_Laba8\h;D:\KgSem4_2026\KG_Sem4_Laba8\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <MinimalRebuild></MinimalRebuild>
+      <Optimization>Disabled</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <SupportJustMyCode></SupportJustMyCode>
+      <UseFullPaths>false</UseFullPaths>
+      <WarningLevel>Level4</WarningLevel>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;UNICODE;_UNICODE;NOMINMAX;WIN32_LEAN_AND_MEAN;CMAKE_INTDIR="Debug"</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_DEBUG;_WINDOWS;UNICODE;_UNICODE;NOMINMAX;WIN32_LEAN_AND_MEAN;CMAKE_INTDIR=\"Debug\"</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\assimp\assimp-6.0.5\include;C:\assimp\assimp-6.0.5\build\include;D:\KgSem4_2026\KG_Sem4_Laba8\h;D:\KgSem4_2026\KG_Sem4_Laba8\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>C:\assimp\assimp-6.0.5\include;C:\assimp\assimp-6.0.5\build\include;D:\KgSem4_2026\KG_Sem4_Laba8\h;D:\KgSem4_2026\KG_Sem4_Laba8\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Link>
+      <AdditionalDependencies>d3d12.lib;dxgi.lib;d3dcompiler.lib;windowscodecs.lib;assimp-vc143-mtd.lib;zlibstaticd.lib;ole32.lib;oleaut32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:/assimp/assimp-6.0.5/build/lib/Debug;C:/assimp/assimp-6.0.5/build/lib/Debug/$(Configuration);C:/assimp/assimp-6.0.5/build/contrib/zlib/Debug;C:/assimp/assimp-6.0.5/build/contrib/zlib/Debug/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ImportLibrary>D:/KgSem4_2026/KG_Sem4_Laba8/build-pbr/Debug/CG_Sem2.lib</ImportLibrary>
+      <ProgramDataBaseFile>D:/KgSem4_2026/KG_Sem4_Laba8/build-pbr/Debug/CG_Sem2.pdb</ProgramDataBaseFile>
+      <SubSystem>Windows</SubSystem>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>C:\assimp\assimp-6.0.5\include;C:\assimp\assimp-6.0.5\build\include;D:\KgSem4_2026\KG_Sem4_Laba8\h;D:\KgSem4_2026\KG_Sem4_Laba8\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <MinimalRebuild></MinimalRebuild>
+      <Optimization>MaxSpeed</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <SupportJustMyCode></SupportJustMyCode>
+      <UseFullPaths>false</UseFullPaths>
+      <WarningLevel>Level4</WarningLevel>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;UNICODE;_UNICODE;NOMINMAX;WIN32_LEAN_AND_MEAN;CMAKE_INTDIR="Release"</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <DebugInformationFormat>
+      </DebugInformationFormat>
+      <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;UNICODE;_UNICODE;NOMINMAX;WIN32_LEAN_AND_MEAN;CMAKE_INTDIR=\"Release\"</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\assimp\assimp-6.0.5\include;C:\assimp\assimp-6.0.5\build\include;D:\KgSem4_2026\KG_Sem4_Laba8\h;D:\KgSem4_2026\KG_Sem4_Laba8\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>C:\assimp\assimp-6.0.5\include;C:\assimp\assimp-6.0.5\build\include;D:\KgSem4_2026\KG_Sem4_Laba8\h;D:\KgSem4_2026\KG_Sem4_Laba8\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Link>
+      <AdditionalDependencies>d3d12.lib;dxgi.lib;d3dcompiler.lib;windowscodecs.lib;assimp-vc143-mtd.lib;zlibstaticd.lib;ole32.lib;oleaut32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:/assimp/assimp-6.0.5/build/lib/Debug;C:/assimp/assimp-6.0.5/build/lib/Debug/$(Configuration);C:/assimp/assimp-6.0.5/build/contrib/zlib/Debug;C:/assimp/assimp-6.0.5/build/contrib/zlib/Debug/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ImportLibrary>D:/KgSem4_2026/KG_Sem4_Laba8/build-pbr/Release/CG_Sem2.lib</ImportLibrary>
+      <ProgramDataBaseFile>D:/KgSem4_2026/KG_Sem4_Laba8/build-pbr/Release/CG_Sem2.pdb</ProgramDataBaseFile>
+      <SubSystem>Windows</SubSystem>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>C:\assimp\assimp-6.0.5\include;C:\assimp\assimp-6.0.5\build\include;D:\KgSem4_2026\KG_Sem4_Laba8\h;D:\KgSem4_2026\KG_Sem4_Laba8\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <MinimalRebuild></MinimalRebuild>
+      <Optimization>MinSpace</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <SupportJustMyCode></SupportJustMyCode>
+      <UseFullPaths>false</UseFullPaths>
+      <WarningLevel>Level4</WarningLevel>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;UNICODE;_UNICODE;NOMINMAX;WIN32_LEAN_AND_MEAN;CMAKE_INTDIR="MinSizeRel"</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <DebugInformationFormat>
+      </DebugInformationFormat>
+      <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;UNICODE;_UNICODE;NOMINMAX;WIN32_LEAN_AND_MEAN;CMAKE_INTDIR=\"MinSizeRel\"</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\assimp\assimp-6.0.5\include;C:\assimp\assimp-6.0.5\build\include;D:\KgSem4_2026\KG_Sem4_Laba8\h;D:\KgSem4_2026\KG_Sem4_Laba8\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>C:\assimp\assimp-6.0.5\include;C:\assimp\assimp-6.0.5\build\include;D:\KgSem4_2026\KG_Sem4_Laba8\h;D:\KgSem4_2026\KG_Sem4_Laba8\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Link>
+      <AdditionalDependencies>d3d12.lib;dxgi.lib;d3dcompiler.lib;windowscodecs.lib;assimp-vc143-mtd.lib;zlibstaticd.lib;ole32.lib;oleaut32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:/assimp/assimp-6.0.5/build/lib/Debug;C:/assimp/assimp-6.0.5/build/lib/Debug/$(Configuration);C:/assimp/assimp-6.0.5/build/contrib/zlib/Debug;C:/assimp/assimp-6.0.5/build/contrib/zlib/Debug/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ImportLibrary>D:/KgSem4_2026/KG_Sem4_Laba8/build-pbr/MinSizeRel/CG_Sem2.lib</ImportLibrary>
+      <ProgramDataBaseFile>D:/KgSem4_2026/KG_Sem4_Laba8/build-pbr/MinSizeRel/CG_Sem2.pdb</ProgramDataBaseFile>
+      <SubSystem>Windows</SubSystem>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>C:\assimp\assimp-6.0.5\include;C:\assimp\assimp-6.0.5\build\include;D:\KgSem4_2026\KG_Sem4_Laba8\h;D:\KgSem4_2026\KG_Sem4_Laba8\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <MinimalRebuild></MinimalRebuild>
+      <Optimization>MaxSpeed</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <SupportJustMyCode></SupportJustMyCode>
+      <UseFullPaths>false</UseFullPaths>
+      <WarningLevel>Level4</WarningLevel>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;UNICODE;_UNICODE;NOMINMAX;WIN32_LEAN_AND_MEAN;CMAKE_INTDIR="RelWithDebInfo"</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;UNICODE;_UNICODE;NOMINMAX;WIN32_LEAN_AND_MEAN;CMAKE_INTDIR=\"RelWithDebInfo\"</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\assimp\assimp-6.0.5\include;C:\assimp\assimp-6.0.5\build\include;D:\KgSem4_2026\KG_Sem4_Laba8\h;D:\KgSem4_2026\KG_Sem4_Laba8\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>C:\assimp\assimp-6.0.5\include;C:\assimp\assimp-6.0.5\build\include;D:\KgSem4_2026\KG_Sem4_Laba8\h;D:\KgSem4_2026\KG_Sem4_Laba8\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Link>
+      <AdditionalDependencies>d3d12.lib;dxgi.lib;d3dcompiler.lib;windowscodecs.lib;assimp-vc143-mtd.lib;zlibstaticd.lib;ole32.lib;oleaut32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:/assimp/assimp-6.0.5/build/lib/Debug;C:/assimp/assimp-6.0.5/build/lib/Debug/$(Configuration);C:/assimp/assimp-6.0.5/build/contrib/zlib/Debug;C:/assimp/assimp-6.0.5/build/contrib/zlib/Debug/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ImportLibrary>D:/KgSem4_2026/KG_Sem4_Laba8/build-pbr/RelWithDebInfo/CG_Sem2.lib</ImportLibrary>
+      <ProgramDataBaseFile>D:/KgSem4_2026/KG_Sem4_Laba8/build-pbr/RelWithDebInfo/CG_Sem2.pdb</ProgramDataBaseFile>
+      <SubSystem>Windows</SubSystem>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <CustomBuild Include="D:\KgSem4_2026\KG_Sem4_Laba8\CMakeLists.txt">
+      <UseUtf8Encoding>Always</UseUtf8Encoding>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Building Custom Rule D:/KgSem4_2026/KG_Sem4_Laba8/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
+"C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\bin\cmake.exe" -SD:/KgSem4_2026/KG_Sem4_Laba8 -BD:/KgSem4_2026/KG_Sem4_Laba8/build-pbr --check-stamp-file D:/KgSem4_2026/KG_Sem4_Laba8/build-pbr/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\CMakeCXXInformation.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\CMakeGenericSystem.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\CMakeInitializeConfigs.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\CMakeLanguageInformation.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\CMakeRCInformation.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\Compiler\MSVC.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\Internal\CMakeCXXLinkerInformation.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\Internal\CMakeCommonLinkerInformation.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\Platform\Linker\Windows-MSVC-CXX.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\Platform\Linker\Windows-MSVC.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\Platform\Windows-Initialize.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\Platform\Windows-MSVC.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\Platform\Windows.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\Platform\WindowsPaths.cmake;D:\KgSem4_2026\KG_Sem4_Laba8\build-pbr\CMakeFiles\3.31.6\CMakeCXXCompiler.cmake;D:\KgSem4_2026\KG_Sem4_Laba8\build-pbr\CMakeFiles\3.31.6\CMakeRCCompiler.cmake;D:\KgSem4_2026\KG_Sem4_Laba8\build-pbr\CMakeFiles\3.31.6\CMakeSystem.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">D:\KgSem4_2026\KG_Sem4_Laba8\build-pbr\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Building Custom Rule D:/KgSem4_2026/KG_Sem4_Laba8/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
+"C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\bin\cmake.exe" -SD:/KgSem4_2026/KG_Sem4_Laba8 -BD:/KgSem4_2026/KG_Sem4_Laba8/build-pbr --check-stamp-file D:/KgSem4_2026/KG_Sem4_Laba8/build-pbr/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\CMakeCXXInformation.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\CMakeGenericSystem.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\CMakeInitializeConfigs.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\CMakeLanguageInformation.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\CMakeRCInformation.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\Compiler\MSVC.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\Internal\CMakeCXXLinkerInformation.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\Internal\CMakeCommonLinkerInformation.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\Platform\Linker\Windows-MSVC-CXX.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\Platform\Linker\Windows-MSVC.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\Platform\Windows-Initialize.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\Platform\Windows-MSVC.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\Platform\Windows.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\Platform\WindowsPaths.cmake;D:\KgSem4_2026\KG_Sem4_Laba8\build-pbr\CMakeFiles\3.31.6\CMakeCXXCompiler.cmake;D:\KgSem4_2026\KG_Sem4_Laba8\build-pbr\CMakeFiles\3.31.6\CMakeRCCompiler.cmake;D:\KgSem4_2026\KG_Sem4_Laba8\build-pbr\CMakeFiles\3.31.6\CMakeSystem.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\KgSem4_2026\KG_Sem4_Laba8\build-pbr\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Building Custom Rule D:/KgSem4_2026/KG_Sem4_Laba8/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">setlocal
+"C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\bin\cmake.exe" -SD:/KgSem4_2026/KG_Sem4_Laba8 -BD:/KgSem4_2026/KG_Sem4_Laba8/build-pbr --check-stamp-file D:/KgSem4_2026/KG_Sem4_Laba8/build-pbr/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\CMakeCXXInformation.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\CMakeGenericSystem.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\CMakeInitializeConfigs.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\CMakeLanguageInformation.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\CMakeRCInformation.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\Compiler\MSVC.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\Internal\CMakeCXXLinkerInformation.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\Internal\CMakeCommonLinkerInformation.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\Platform\Linker\Windows-MSVC-CXX.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\Platform\Linker\Windows-MSVC.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\Platform\Windows-Initialize.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\Platform\Windows-MSVC.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\Platform\Windows.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\Platform\WindowsPaths.cmake;D:\KgSem4_2026\KG_Sem4_Laba8\build-pbr\CMakeFiles\3.31.6\CMakeCXXCompiler.cmake;D:\KgSem4_2026\KG_Sem4_Laba8\build-pbr\CMakeFiles\3.31.6\CMakeRCCompiler.cmake;D:\KgSem4_2026\KG_Sem4_Laba8\build-pbr\CMakeFiles\3.31.6\CMakeSystem.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">D:\KgSem4_2026\KG_Sem4_Laba8\build-pbr\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Building Custom Rule D:/KgSem4_2026/KG_Sem4_Laba8/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">setlocal
+"C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\bin\cmake.exe" -SD:/KgSem4_2026/KG_Sem4_Laba8 -BD:/KgSem4_2026/KG_Sem4_Laba8/build-pbr --check-stamp-file D:/KgSem4_2026/KG_Sem4_Laba8/build-pbr/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\CMakeCXXInformation.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\CMakeGenericSystem.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\CMakeInitializeConfigs.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\CMakeLanguageInformation.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\CMakeRCInformation.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\Compiler\MSVC.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\Internal\CMakeCXXLinkerInformation.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\Internal\CMakeCommonLinkerInformation.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\Platform\Linker\Windows-MSVC-CXX.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\Platform\Linker\Windows-MSVC.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\Platform\Windows-Initialize.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\Platform\Windows-MSVC.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\Platform\Windows.cmake;C:\Program Files\JetBrains\CLion 2025.1.2\bin\cmake\win\x64\share\cmake-3.31\Modules\Platform\WindowsPaths.cmake;D:\KgSem4_2026\KG_Sem4_Laba8\build-pbr\CMakeFiles\3.31.6\CMakeCXXCompiler.cmake;D:\KgSem4_2026\KG_Sem4_Laba8\build-pbr\CMakeFiles\3.31.6\CMakeRCCompiler.cmake;D:\KgSem4_2026\KG_Sem4_Laba8\build-pbr\CMakeFiles\3.31.6\CMakeSystem.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">D:\KgSem4_2026\KG_Sem4_Laba8\build-pbr\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</LinkObjects>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="D:\KgSem4_2026\KG_Sem4_Laba8\src\main.cpp" />
+    <ClCompile Include="D:\KgSem4_2026\KG_Sem4_Laba8\src\Window.cpp" />
+    <ClCompile Include="D:\KgSem4_2026\KG_Sem4_Laba8\src\DirectXApp.cpp" />
+    <ClCompile Include="D:\KgSem4_2026\KG_Sem4_Laba8\src\RenderingSystem.cpp" />
+    <ClCompile Include="D:\KgSem4_2026\KG_Sem4_Laba8\src\GBuffer.cpp" />
+    <ClCompile Include="D:\KgSem4_2026\KG_Sem4_Laba8\src\model_loader.cpp" />
+    <ClCompile Include="D:\KgSem4_2026\KG_Sem4_Laba8\src\DDSTextureLoader.cpp" />
+    <ClCompile Include="D:\KgSem4_2026\KG_Sem4_Laba8\src\d3dUtil.cpp" />
+    <ClCompile Include="D:\KgSem4_2026\KG_Sem4_Laba8\src\GameTimer.cpp" />
+    <ClInclude Include="D:\KgSem4_2026\KG_Sem4_Laba8\h\Window.h" />
+    <ClInclude Include="D:\KgSem4_2026\KG_Sem4_Laba8\h\DirectXApp.h" />
+    <ClInclude Include="D:\KgSem4_2026\KG_Sem4_Laba8\h\RenderingSystem.h" />
+    <ClInclude Include="D:\KgSem4_2026\KG_Sem4_Laba8\h\GBuffer.h" />
+    <ClInclude Include="D:\KgSem4_2026\KG_Sem4_Laba8\h\model_loader.h" />
+    <ClInclude Include="D:\KgSem4_2026\KG_Sem4_Laba8\h\mesh_data.h" />
+    <ClInclude Include="D:\KgSem4_2026\KG_Sem4_Laba8\h\DDSTextureLoader.h" />
+    <ClInclude Include="D:\KgSem4_2026\KG_Sem4_Laba8\h\d3dUtil.h" />
+    <ClInclude Include="D:\KgSem4_2026\KG_Sem4_Laba8\h\UploadBuffer.h" />
+    <ClInclude Include="D:\KgSem4_2026\KG_Sem4_Laba8\h\GameTimer.h" />
+    <ClInclude Include="D:\KgSem4_2026\KG_Sem4_Laba8\h\Vertex.h" />
+    <ClInclude Include="D:\KgSem4_2026\KG_Sem4_Laba8\h\Material.h" />
+    <ClInclude Include="D:\KgSem4_2026\KG_Sem4_Laba8\h\Light.h" />
+    <ClInclude Include="D:\KgSem4_2026\KG_Sem4_Laba8\h\d3dx12.h" />
+    <ClInclude Include="D:\KgSem4_2026\KG_Sem4_Laba8\src\main_shader.hlsl" />
+    <ClInclude Include="D:\KgSem4_2026\KG_Sem4_Laba8\src\lighting.hlsl" />
+    <ClInclude Include="D:\KgSem4_2026\KG_Sem4_Laba8\src\particles.hlsl" />
+    <ClInclude Include="D:\KgSem4_2026\KG_Sem4_Laba8\src\post_effects.hlsl" />
+  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="D:\KgSem4_2026\KG_Sem4_Laba8\build-pbr\ZERO_CHECK.vcxproj">
+      <Project>{4F017FD6-D342-32CA-99A8-0134C2E8FB73}</Project>
+      <Name>ZERO_CHECK</Name>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

@@ -1,0 +1,3 @@
+D:/KgSem4_2026/KG_Sem4_Laba5/build/CMakeFiles/CG_Sem2.dir
+D:/KgSem4_2026/KG_Sem4_Laba5/build/CMakeFiles/edit_cache.dir
+D:/KgSem4_2026/KG_Sem4_Laba5/build/CMakeFiles/rebuild_cache.dir

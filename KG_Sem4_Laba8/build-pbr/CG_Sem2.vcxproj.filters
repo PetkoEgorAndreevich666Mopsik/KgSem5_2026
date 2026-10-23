@@ -1,0 +1,91 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="D:\KgSem4_2026\KG_Sem4_Laba8\src\main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\KgSem4_2026\KG_Sem4_Laba8\src\Window.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\KgSem4_2026\KG_Sem4_Laba8\src\DirectXApp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\KgSem4_2026\KG_Sem4_Laba8\src\RenderingSystem.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\KgSem4_2026\KG_Sem4_Laba8\src\GBuffer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\KgSem4_2026\KG_Sem4_Laba8\src\model_loader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\KgSem4_2026\KG_Sem4_Laba8\src\DDSTextureLoader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\KgSem4_2026\KG_Sem4_Laba8\src\d3dUtil.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\KgSem4_2026\KG_Sem4_Laba8\src\GameTimer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="D:\KgSem4_2026\KG_Sem4_Laba8\h\Window.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\KgSem4_2026\KG_Sem4_Laba8\h\DirectXApp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\KgSem4_2026\KG_Sem4_Laba8\h\RenderingSystem.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\KgSem4_2026\KG_Sem4_Laba8\h\GBuffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\KgSem4_2026\KG_Sem4_Laba8\h\model_loader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\KgSem4_2026\KG_Sem4_Laba8\h\mesh_data.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\KgSem4_2026\KG_Sem4_Laba8\h\DDSTextureLoader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\KgSem4_2026\KG_Sem4_Laba8\h\d3dUtil.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\KgSem4_2026\KG_Sem4_Laba8\h\UploadBuffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\KgSem4_2026\KG_Sem4_Laba8\h\GameTimer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\KgSem4_2026\KG_Sem4_Laba8\h\Vertex.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\KgSem4_2026\KG_Sem4_Laba8\h\Material.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\KgSem4_2026\KG_Sem4_Laba8\h\Light.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\KgSem4_2026\KG_Sem4_Laba8\h\d3dx12.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\KgSem4_2026\KG_Sem4_Laba8\src\main_shader.hlsl" />
+    <ClInclude Include="D:\KgSem4_2026\KG_Sem4_Laba8\src\lighting.hlsl" />
+    <ClInclude Include="D:\KgSem4_2026\KG_Sem4_Laba8\src\particles.hlsl" />
+    <ClInclude Include="D:\KgSem4_2026\KG_Sem4_Laba8\src\post_effects.hlsl" />
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="D:\KgSem4_2026\KG_Sem4_Laba8\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{5FCF338E-5EE2-319F-8FFF-C22D41DB9CE9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{8D83606B-6204-3576-858E-9EA6DD02952B}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
