@@ -148,7 +148,7 @@ PixelIn DS_Main(HSConstants hsc, float3 bary : SV_DomainLocation, const OutputPa
     float height = gDisplacementMap.SampleLevel(gLinearWrap, texC, 0.0f).r;
     float displacement = (height - 0.5f) * 2.0f;
     float dispStrength = (gObjectParams.y > 0.0f) ? gObjectParams.y : 0.2f;
-    posW += normalW * (displacement * dispStrength);
+        posW += normalW * (displacement * dispStrength);
 
     if (gObjectParams.w > 1.5f)
     {
