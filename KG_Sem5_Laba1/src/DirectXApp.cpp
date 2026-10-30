@@ -614,6 +614,8 @@ void DirectXApp::OnResize(unsigned int width, unsigned int height) {
 
 void DirectXApp::BuildScene() {
     FlushCommandQueue();
+    mDirtyTerrainNodes.clear();
+    mBrushVisible = mBrushRaise = mBrushLower = false;
     mVisibleSubmeshes.clear();
     mShadowSubmeshes.clear();
     mLastVisibleObjectCount = 0;
@@ -640,7 +642,7 @@ void DirectXApp::BuildScene() {
     mCommandQueue->ExecuteCommandLists(1, cmdLists);
     FlushCommandQueue();
 
-    mVertexBufferUploader.Reset();
+    if (mCurrentScene != 0) mVertexBufferUploader.Reset();
     mIndexBufferUploader.Reset();
 
     ResetParticles();
@@ -648,7 +650,8 @@ void DirectXApp::BuildScene() {
 
 void DirectXApp::LoadModels() {
     if (mCurrentScene == 0) {
-        mTerrain.Load("../assets/terrain", mSceneMesh);
+        if (mTerrain.Nodes().empty()) mTerrain.Load("../assets/terrain", mSceneMesh);
+        else mTerrain.BuildMesh(mSceneMesh);
         for (auto& submesh : mSceneMesh.submeshes) {
             submesh.material.diffuseTextureName = "Albedo_Out";
             submesh.material.normalTextureName = "Normals_Out";
@@ -724,6 +727,49 @@ void DirectXApp::BuildGeometryBuffers() {
     mIndexBufferView.BufferLocation = mIndexBufferGPU->GetGPUVirtualAddress();
     mIndexBufferView.Format = DXGI_FORMAT_R32_UINT;
     mIndexBufferView.SizeInBytes = ibByteSize;
+}
+
+void DirectXApp::UpdateTerrainBrush(const XMMATRIX& view, const XMMATRIX& proj, float dt) {
+    mBrushVisible = false;
+    mTerrain.SetBrushRegion({}, 0);
+    if (mCurrentScene != 0 || !mBrushEnabled || GetForegroundWindow() != mHwnd) return;
+    POINT cursor;
+    if (!GetCursorPos(&cursor) || !ScreenToClient(mHwnd, &cursor)) return;
+    mBrushCursor = cursor;
+    if (mBrushCursor.x < 0 || mBrushCursor.y < 0 || mBrushCursor.x >= static_cast<LONG>(mClientWidth) ||
+        mBrushCursor.y >= static_cast<LONG>(mClientHeight)) return;
+    const auto nearPoint = XMVector3Unproject(XMVectorSet(float(mBrushCursor.x), float(mBrushCursor.y), 0, 1),
+        0, 0, float(mClientWidth), float(mClientHeight), 0, 1, proj, view, XMMatrixIdentity());
+    const auto farPoint = XMVector3Unproject(XMVectorSet(float(mBrushCursor.x), float(mBrushCursor.y), 1, 1),
+        0, 0, float(mClientWidth), float(mClientHeight), 0, 1, proj, view, XMMatrixIdentity());
+    XMFLOAT3 direction;
+    XMStoreFloat3(&direction, XMVector3Normalize(farPoint - nearPoint));
+    mBrushVisible = mTerrain.Raycast(mEyePos, direction, mBrushPoint);
+    if (mBrushVisible) mTerrain.SetBrushRegion(mBrushPoint, mBrushRadius);
+    if (mBrushVisible && mBrushRaise != mBrushLower) {
+        const float amount = (mBrushRaise ? 12.0f : -12.0f) * std::clamp(dt, 0.0f, 0.05f);
+        mDirtyTerrainNodes = mTerrain.ApplyBrush(mBrushPoint, mBrushRadius, amount, mSceneMesh);
+    }
+}
+
+void DirectXApp::UploadTerrainEdits() {
+    if (mDirtyTerrainNodes.empty()) return;
+    unsigned char* mapped = nullptr;
+    const D3D12_RANGE noRead = {0, 0};
+    ThrowIfFailed(mVertexBufferUploader->Map(0, &noRead, reinterpret_cast<void**>(&mapped)), "Map terrain upload failed");
+    auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(mVertexBufferGPU.Get(), D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_COPY_DEST);
+    mCommandList->ResourceBarrier(1, &barrier);
+    for (auto index : mDirtyTerrainNodes) {
+        const auto& node = mTerrain.Nodes()[index];
+        const UINT64 offset = UINT64(node.vertexStart) * sizeof(Vertex);
+        const UINT64 bytes = UINT64(node.vertexCount) * sizeof(Vertex);
+        std::memcpy(mapped + offset, mSceneMesh.vertices.data() + node.vertexStart, static_cast<size_t>(bytes));
+        mCommandList->CopyBufferRegion(mVertexBufferGPU.Get(), offset, mVertexBufferUploader.Get(), offset, bytes);
+    }
+    mVertexBufferUploader->Unmap(0, nullptr);
+    barrier = CD3DX12_RESOURCE_BARRIER::Transition(mVertexBufferGPU.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_GENERIC_READ);
+    mCommandList->ResourceBarrier(1, &barrier);
+    mDirtyTerrainNodes.clear();
 }
 
 void DirectXApp::LoadTextures() {
@@ -1277,6 +1323,12 @@ void DirectXApp::UpdateCamera(float dt) {
 
 void DirectXApp::Update(const GameTimer& gt) {
     UpdateCamera(gt.DeltaTime());
+    const bool brushKey = GetForegroundWindow() == mHwnd && (GetAsyncKeyState('B') & 0x8000) != 0;
+    if (brushKey && !mBWasDown) {
+        mBrushEnabled = !mBrushEnabled;
+        mBrushRaise = mBrushLower = false;
+    }
+    mBWasDown = brushKey;
 
     if (GetAsyncKeyState('3') & 0x8000) mDebugViewMode = 1;
     if (GetAsyncKeyState('4') & 0x8000) mDebugViewMode = 2;
@@ -1308,6 +1360,7 @@ void DirectXApp::Update(const GameTimer& gt) {
         }
         title << L" | Culling " << (mFrustumCullingEnabled ? L"ON" : L"OFF")
             << L" | Num1:Terrain Num2:Earth Num3:Sponza | 3:Material 4:Normals 5:Wire 8:Culling 9:LOD";
+        if (mCurrentScene == 0) title << L" | B:Brush " << (mBrushEnabled ? L"ON" : L"OFF") << L" R=" << int(mBrushRadius) << L" LMB:+ RMB:- MMB:Look Wheel:Radius";
         SetWindowTextW(mHwnd, title.str().c_str());
     }
 
@@ -1335,11 +1388,13 @@ void DirectXApp::Update(const GameTimer& gt) {
             mTexAnimV -= 1.0f;
         }
     }
+    UpdateTerrainBrush(view, proj, gt.DeltaTime());
     PassConstants pass = {};
     XMMATRIX invViewProj = XMMatrixInverse(nullptr, view * proj);
     XMStoreFloat4x4(&pass.InvViewProj, XMMatrixTranspose(invViewProj));
     pass.EyePosW = mEyePos;
     pass.AmbientColor = XMFLOAT4(0.08f, 0.08f, 0.1f, 1.0f);
+    pass.Brush = XMFLOAT4(mBrushPoint.x, mBrushPoint.z, mBrushRadius, mBrushVisible ? 1.0f : 0.0f);
     mPassCB->CopyData(0, pass);
 
     ShadowConstants shadow = {};
@@ -1460,6 +1515,7 @@ void DirectXApp::Draw(const GameTimer& gt) {
 
     ThrowIfFailed(mDirectCmdListAlloc->Reset(), "Reset command allocator failed");
     ThrowIfFailed(mCommandList->Reset(mDirectCmdListAlloc.Get(), nullptr), "Reset command list failed");
+    UploadTerrainEdits();
 
     ID3D12DescriptorHeap* descriptorHeaps[] = {mCbvSrvHeap.Get()};
     mCommandList->SetDescriptorHeaps(1, descriptorHeaps);
@@ -1786,18 +1842,40 @@ LRESULT DirectXApp::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             return 0;
         }
         break;
+    case WM_LBUTTONDOWN:
     case WM_RBUTTONDOWN:
+    case WM_MBUTTONDOWN:
+        mBrushCursor = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
+        if (mCurrentScene == 0 && mBrushEnabled) {
+            if (msg == WM_LBUTTONDOWN) mBrushRaise = true;
+            if (msg == WM_RBUTTONDOWN) mBrushLower = true;
+        }
         mLastMousePos.x = GET_X_LPARAM(lParam);
         mLastMousePos.y = GET_Y_LPARAM(lParam);
         SetCapture(mHwnd);
         return 0;
 
+    case WM_LBUTTONUP:
     case WM_RBUTTONUP:
-        ReleaseCapture();
+    case WM_MBUTTONUP:
+        if (msg == WM_LBUTTONUP) mBrushRaise = false;
+        if (msg == WM_RBUTTONUP) mBrushLower = false;
+        if (!mBrushRaise && !mBrushLower) ReleaseCapture();
+        return 0;
+
+    case WM_CAPTURECHANGED:
+    case WM_KILLFOCUS:
+        mBrushRaise = mBrushLower = mBrushVisible = false;
+        return 0;
+
+    case WM_MOUSEWHEEL:
+        if (mCurrentScene == 0 && mBrushEnabled)
+            mBrushRadius = std::clamp(mBrushRadius + GET_WHEEL_DELTA_WPARAM(wParam) / float(WHEEL_DELTA) * 2.0f, 4.0f, 48.0f);
         return 0;
 
     case WM_MOUSEMOVE:
-        if (wParam & MK_RBUTTON) {
+        mBrushCursor = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
+        if (wParam & (mCurrentScene == 0 && mBrushEnabled ? MK_MBUTTON : MK_RBUTTON)) {
             const float dx = XMConvertToRadians(0.25f * static_cast<float>(GET_X_LPARAM(lParam) - mLastMousePos.x));
             const float dy = XMConvertToRadians(0.25f * static_cast<float>(GET_Y_LPARAM(lParam) - mLastMousePos.y));
 

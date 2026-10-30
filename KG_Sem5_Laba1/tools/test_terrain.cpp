@@ -132,6 +132,54 @@ int main(int argc, char** argv) {
     auto overhead = terrain.Select(frustum, {0, root.surfaceBounds.Center.y + 300, 0}, false, true);
     assert(overhead.size() == 16);
     for (auto patch : overhead) assert(terrain.Nodes()[patch].level == 2);
+    terrain.SetBrushRegion({0, 0, 0}, 4);
+    auto brushDetail = terrain.Select(frustum, {0, 100000, 0}, false, true);
+    bool detailedBrush = false;
+    for (auto patch : brushDetail) {
+        const auto& node = terrain.Nodes()[patch];
+        if (node.x <= 512 && node.x + node.cells >= 512 && node.z <= 512 && node.z + node.cells >= 512) {
+            assert(node.level == 4);
+            detailedBrush = true;
+        }
+    }
+    assert(detailedBrush);
+    terrain.SetBrushRegion({}, 0);
+    assert(terrain.Select(frustum, {0, 100000, 0}, false, true).size() == 1);
+    Terrain sculpted;
+    MeshData sculptMesh;
+    sculpted.Load(argv[1], sculptMesh);
+    XMFLOAT3 center, outside, halfRadius, edge, after;
+    assert(sculpted.Raycast({0, 200, 0}, {0, -1, 0}, center));
+    assert(sculpted.Raycast({20, 200, 0}, {0, -1, 0}, outside));
+    assert(sculpted.Raycast({6, 200, 0}, {0, -1, 0}, halfRadius));
+    assert(sculpted.Raycast({12, 200, 0}, {0, -1, 0}, edge));
+    assert(!sculpted.Raycast({0, 200, 0}, {0, 1, 0}, after));
+    assert(!sculpted.Raycast({0, 200, 0}, {0, 0, 0}, after));
+    assert(sculpted.ApplyBrush(center, -1, 2, sculptMesh).empty());
+    assert(sculpted.ApplyBrush(center, 12, std::numeric_limits<float>::quiet_NaN(), sculptMesh).empty());
+    auto dirty = sculpted.ApplyBrush(center, 12, 2, sculptMesh);
+    assert(!dirty.empty() && dirty.size() < sculpted.Nodes().size());
+    assert(sculpted.Raycast({0, 200, 0}, {0, -1, 0}, after) && std::abs(after.y - center.y - 2) < 0.001f);
+    assert(sculpted.Raycast({6, 200, 0}, {0, -1, 0}, after) && after.y > halfRadius.y && after.y < halfRadius.y + 2);
+    assert(sculpted.Raycast({12, 200, 0}, {0, -1, 0}, after) && std::abs(after.y - edge.y) < 0.001f);
+    assert(sculpted.Raycast({20, 200, 0}, {0, -1, 0}, after) && std::abs(after.y - outside.y) < 0.001f);
+    sculpted.ApplyBrush(center, 12, -2, sculptMesh);
+    assert(sculpted.Raycast({0, 200, 0}, {0, -1, 0}, after) && std::abs(after.y - center.y) < 0.001f);
+    sculpted.ApplyBrush(center, 12, -80, sculptMesh);
+    assert(sculpted.Raycast({0, 200, 0}, {0, -1, 0}, after) && std::abs(after.y - center.y + 80) < 0.001f);
+    const float pitHeight = after.y;
+    for (const auto& node : sculpted.Nodes()) {
+        assert(node.vertexStart + node.vertexCount <= sculptMesh.vertices.size());
+        for (unsigned int i = 0; i < node.vertexCount; ++i) {
+            const auto& vertex = sculptMesh.vertices[node.vertexStart + i];
+            assert(std::isfinite(vertex.Normal.x) && std::isfinite(vertex.Normal.y) && std::isfinite(vertex.Normal.z));
+            assert(std::abs(vertex.Position.y - node.bounds.Center.y) <= node.bounds.Extents.y + 0.001f);
+            if (i >= 33 * 33 && (i - 33 * 33) % 2 == 1) assert(vertex.Position.y <= pitHeight - 9.9f);
+            else if (vertex.Position.x == 0 && vertex.Position.z == 0) assert(std::abs(vertex.Position.y - pitHeight) < 0.001f);
+        }
+    }
+    sculpted.BuildMesh(sculptMesh);
+    assert(sculpted.Raycast({0, 200, 0}, {0, -1, 0}, after) && std::abs(after.y - pitHeight) < 0.001f);
     std::cout << "Terrain checks passed: 16 tiles, 341 nodes; near=" << near.size()
         << ", far=" << far.size() << ", full=" << full.size() << ", visible=" << visible.size() << '\n';
 }

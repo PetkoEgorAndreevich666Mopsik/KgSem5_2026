@@ -20,6 +20,7 @@ cbuffer PassConstants : register(b1)
     float3 gEyePosW;
     float gPassPadding;
     float4 gAmbientColor;
+    float4 gBrush;
 };
 
 struct VSInput
@@ -210,6 +211,11 @@ GBufferOut PS_Geometry(PixelIn pin)
         float2 uv = (saturate(pin.TexC) * (float2(width, height) - 1.0f) + 0.5f) / float2(width, height);
         albedo = gDiffuseMap.Sample(gTerrainClamp, uv);
         normalW = normalize(gNormalMap.Sample(gTerrainClamp, uv).xyz * 2.0f - 1.0f);
+        float3 original = normalize(pin.BitangentW);
+        float3 current = normalize(pin.NormalW);
+        float2 slope = normalW.xz / max(normalW.y, 0.05f)
+            + current.xz / max(current.y, 0.05f) - original.xz / max(original.y, 0.05f);
+        normalW = normalize(float3(slope.x, 1.0f, slope.y));
         if (pin.TangentW.y < -0.5f) {
             normalW = normalize(pin.NormalW);
             albedo.rgb *= 0.65f;
@@ -237,6 +243,12 @@ GBufferOut PS_Geometry(PixelIn pin)
         albedo = float4(tessColor, 1.0f);
     }
 
+    if (gObjectParams.w < 0.0f && gBrush.w > 0.0f && pin.TangentW.y > -0.5f) {
+        float distance = length(pin.PosW.xz - gBrush.xy);
+        float width = max(0.15f, fwidth(distance) * 1.5f);
+        float ring = 1.0f - smoothstep(width, width * 2.0f, abs(distance - gBrush.z));
+        albedo.rgb = lerp(albedo.rgb, float3(1.0f, 0.85f, 0.05f), ring);
+    }
     pout.Albedo = float4(pow(max(albedo.rgb, 0.0f), 2.2f), saturate(gTimePadding.y));
     pout.Normal = float4(normalW * 0.5f + 0.5f, gObjectParams.w > 1.5f ? lerp(0.8f, 0.12f, ComputeWaterMask(albedo.rgb)) : clamp(gTimePadding.x, 0.04f, 1.0f));
     pout.Depth = pin.PosH.z;

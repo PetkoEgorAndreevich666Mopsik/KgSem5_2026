@@ -109,12 +109,111 @@ void Terrain::Load(const std::string& directory, MeshData& mesh) {
             }
         }
     }
-    mesh = {};
+    mOriginalHeights = mHeights;
     mSkirtBottom = *std::min_element(mHeights.begin(), mHeights.end()) - 10.0f;
+    const auto range = std::minmax_element(mHeights.begin(), mHeights.end());
+    mLodHeight = (*range.first + *range.second) * 0.5f;
+    BuildMesh(mesh);
+}
+
+void Terrain::BuildMesh(MeshData& mesh) {
+    mesh = {};
     mNodes.clear();
     mNodes.reserve(341);
     Build(mesh, 0, 0, mResolution - 1, 0);
     mSplit.assign(mNodes.size(), false);
+}
+
+XMFLOAT3 Terrain::Normal(int x, int z, const std::vector<float>& heights) const {
+    auto sample = [&](int sx, int sz) { return heights[std::clamp(sz, 0, mResolution - 1) * mResolution + std::clamp(sx, 0, mResolution - 1)]; };
+    XMFLOAT3 normal;
+    XMStoreFloat3(&normal, XMVector3Normalize(XMVectorSet(sample(x - 1, z) - sample(x + 1, z),
+        2 * mSize / (mResolution - 1), sample(x, z - 1) - sample(x, z + 1), 0)));
+    return normal;
+}
+
+bool Terrain::Raycast(const XMFLOAT3& origin, const XMFLOAT3& direction, XMFLOAT3& hit) const {
+    if (mNodes.empty() || !std::isfinite(origin.x) || !std::isfinite(origin.y) || !std::isfinite(origin.z) ||
+        !std::isfinite(direction.x) || !std::isfinite(direction.y) || !std::isfinite(direction.z)) return false;
+    const auto start = XMLoadFloat3(&origin);
+    const auto rawDirection = XMLoadFloat3(&direction);
+    if (XMVectorGetX(XMVector3LengthSq(rawDirection)) < 0.000001f) return false;
+    const auto ray = XMVector3Normalize(rawDirection);
+    float closest = FLT_MAX;
+    const float spacing = mSize / (mResolution - 1);
+    auto point = [&](int x, int z) { return XMVectorSet(x * spacing - mSize / 2, Height(x, z), z * spacing - mSize / 2, 1); };
+    auto visit = [&](auto&& self, int index) -> void {
+        const auto& node = mNodes[index];
+        float distance;
+        if (!node.surfaceBounds.Intersects(start, ray, distance) || distance > closest) return;
+        if (node.children[0] >= 0) {
+            for (int child : node.children) self(self, child);
+            return;
+        }
+        const int step = node.cells / 32;
+        for (int z = node.z; z < node.z + node.cells; z += step) {
+            for (int x = node.x; x < node.x + node.cells; x += step) {
+                const auto a = point(x, z), b = point(x + step, z), c = point(x, z + step), d = point(x + step, z + step);
+                if (TriangleTests::Intersects(start, ray, a, c, b, distance)) closest = std::min(closest, distance);
+                if (TriangleTests::Intersects(start, ray, b, c, d, distance)) closest = std::min(closest, distance);
+            }
+        }
+    };
+    visit(visit, 0);
+    if (closest == FLT_MAX) return false;
+    XMStoreFloat3(&hit, start + ray * closest);
+    return true;
+}
+
+std::vector<unsigned int> Terrain::ApplyBrush(const XMFLOAT3& center, float radius, float amount, MeshData& mesh) {
+    std::vector<unsigned int> dirty;
+    if (mNodes.empty() || !std::isfinite(center.x) || !std::isfinite(center.z) || !std::isfinite(radius) ||
+        !std::isfinite(amount) || radius <= 0 || amount == 0 || std::abs(amount) > 100 || mesh.submeshes.size() != mNodes.size()) return dirty;
+    const float spacing = mSize / (mResolution - 1);
+    if (center.x + radius < -mSize / 2 || center.x - radius > mSize / 2 || center.z + radius < -mSize / 2 || center.z - radius > mSize / 2) return dirty;
+    const int x0 = int(std::floor(std::clamp((center.x - radius + mSize / 2) / spacing, 0.0f, float(mResolution - 1))));
+    const int x1 = int(std::ceil(std::clamp((center.x + radius + mSize / 2) / spacing, 0.0f, float(mResolution - 1))));
+    const int z0 = int(std::floor(std::clamp((center.z - radius + mSize / 2) / spacing, 0.0f, float(mResolution - 1))));
+    const int z1 = int(std::ceil(std::clamp((center.z + radius + mSize / 2) / spacing, 0.0f, float(mResolution - 1))));
+    float low = FLT_MAX, high = -FLT_MAX;
+    for (int z = z0; z <= z1; ++z) {
+        for (int x = x0; x <= x1; ++x) {
+            const float dx = x * spacing - mSize / 2 - center.x, dz = z * spacing - mSize / 2 - center.z;
+            const float weight = std::max(0.0f, 1 - (dx * dx + dz * dz) / (radius * radius));
+            auto& value = mHeights[z * mResolution + x];
+            const float next = std::clamp(value + amount * weight * weight, -mSize / 2, mSize / 2);
+            if (value == next) continue;
+            value = next;
+            low = std::min(low, value);
+            high = std::max(high, value);
+        }
+    }
+    if (low == FLT_MAX) return dirty;
+    const bool lowerBase = low < mSkirtBottom + 2;
+    if (lowerBase) mSkirtBottom = low - 10;
+    for (unsigned int i = 0; i < mNodes.size(); ++i) {
+        auto& node = mNodes[i];
+        const auto& box = node.surfaceBounds;
+        const float dx = std::max(0.0f, std::abs(center.x - box.Center.x) - box.Extents.x);
+        const float dz = std::max(0.0f, std::abs(center.z - box.Center.z) - box.Extents.z);
+        if (!lowerBase && dx * dx + dz * dz > (radius + spacing * 2) * (radius + spacing * 2)) continue;
+        for (unsigned int v = 0; v < node.vertexCount; ++v) {
+            auto& vertex = mesh.vertices[node.vertexStart + v];
+            const int x = int(std::lround(vertex.TexC.x * (mResolution - 1)));
+            const int z = int(std::lround(vertex.TexC.y * (mResolution - 1)));
+            const bool bottom = v >= 33 * 33 && (v - 33 * 33) % 2 == 1;
+            vertex.Position.y = bottom ? mSkirtBottom : Height(x, z);
+            if (vertex.Tangent.y > -0.5f) vertex.Normal = Normal(x, z, mHeights);
+        }
+        const float minimum = std::min(box.Center.y - box.Extents.y, low);
+        const float maximum = std::max(box.Center.y + box.Extents.y, high);
+        node.surfaceBounds.Center.y = (minimum + maximum) / 2;
+        node.surfaceBounds.Extents.y = (maximum - minimum) / 2;
+        node.bounds.Center.y = (mSkirtBottom + maximum) / 2;
+        node.bounds.Extents.y = (maximum - mSkirtBottom) / 2;
+        dirty.push_back(i);
+    }
+    return dirty;
 }
 
 int Terrain::Build(MeshData& mesh, int x, int z, int cells, unsigned int level) {
@@ -141,9 +240,8 @@ int Terrain::Build(MeshData& mesh, int x, int z, int cells, unsigned int level) 
             const int sx = x + col * step, sz = z + row * step;
             Vertex vertex;
             vertex.Position = {(sx * spacing) - mSize / 2, Height(sx, sz), (sz * spacing) - mSize / 2};
-            XMVECTOR normal = XMVector3Normalize(XMVectorSet(Height(sx - 1, sz) - Height(sx + 1, sz),
-                2 * spacing, Height(sx, sz - 1) - Height(sx, sz + 1), 0));
-            XMStoreFloat3(&vertex.Normal, normal);
+            vertex.Normal = Normal(sx, sz, mHeights);
+            vertex.Bitangent = Normal(sx, sz, mOriginalHeights);
             vertex.TexC = {float(sx) / (mResolution - 1), float(sz) / (mResolution - 1)};
             mesh.vertices.push_back(vertex);
         }
@@ -184,6 +282,8 @@ int Terrain::Build(MeshData& mesh, int x, int z, int cells, unsigned int level) 
     node.x = x;
     node.z = z;
     node.cells = cells;
+    node.vertexStart = base;
+    node.vertexCount = static_cast<unsigned int>(mesh.vertices.size()) - base;
     node.surfaceBounds = BoundingBox({(x + cells * 0.5f) * spacing - mSize / 2, (low + high) / 2,
         (z + cells * 0.5f) * spacing - mSize / 2}, {cells * spacing / 2, (high - low) / 2, cells * spacing / 2});
     node.bounds = node.surfaceBounds;
@@ -200,6 +300,11 @@ int Terrain::Build(MeshData& mesh, int x, int z, int cells, unsigned int level) 
     return index;
 }
 
+void Terrain::SetBrushRegion(const XMFLOAT3& center, float radius) {
+    mBrushCenter = center;
+    mBrushRadius = std::isfinite(center.x) && std::isfinite(center.z) && std::isfinite(radius) && radius > 0 ? radius : 0;
+}
+
 std::vector<unsigned int> Terrain::Select(const BoundingFrustum& frustum, const XMFLOAT3& eye,
     bool culling, bool lod) const {
     std::vector<unsigned int> selected;
@@ -212,12 +317,15 @@ std::vector<unsigned int> Terrain::Select(const BoundingFrustum& frustum, const 
         const auto& node = mNodes[index];
         const auto& b = node.surfaceBounds;
         const float dx = std::max(0.0f, std::abs(eye.x - b.Center.x) - b.Extents.x);
-        const float dy = eye.y - mNodes.front().surfaceBounds.Center.y;
+        const float dy = eye.y - mLodHeight;
         const float dz = std::max(0.0f, std::abs(eye.z - b.Center.z) - b.Extents.z);
         const float distance = std::max(1.0f, std::sqrt(dx * dx + dy * dy + dz * dz));
         const float splitDistance = node.cells * mSize / (mResolution - 1) * 2.0f;
-        const bool divide = node.children[0] >= 0 && (!lod || distance < splitDistance * (mSplit[index] ? 1.2f : 1.0f));
-        if (lod) mSplit[index] = divide;
+        const bool distanceSplit = node.children[0] >= 0 && (!lod || distance < splitDistance * (mSplit[index] ? 1.2f : 1.0f));
+        const float brushX = std::max(0.0f, std::abs(mBrushCenter.x - b.Center.x) - b.Extents.x);
+        const float brushZ = std::max(0.0f, std::abs(mBrushCenter.z - b.Center.z) - b.Extents.z);
+        const bool divide = distanceSplit || (node.children[0] >= 0 && mBrushRadius > 0 && brushX * brushX + brushZ * brushZ <= mBrushRadius * mBrushRadius);
+        if (lod) mSplit[index] = distanceSplit;
         if (divide) {
             for (int child : node.children) self(self, child);
         } else {

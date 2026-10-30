@@ -32,6 +32,7 @@ struct PassConstants {
     XMFLOAT3 EyePosW = {0.0f, 0.0f, 0.0f};
     float Padding = 0.0f;
     XMFLOAT4 AmbientColor = {0.08f, 0.08f, 0.1f, 1.0f};
+    XMFLOAT4 Brush = {0, 0, 0, 0};
 };
 
 struct PostConstants {
@@ -68,6 +69,8 @@ private:
     void BuildScene();
     void LoadModels();
     void BuildGeometryBuffers();
+    void UpdateTerrainBrush(const XMMATRIX& view, const XMMATRIX& proj, float dt);
+    void UploadTerrainEdits();
     void LoadTextures();
     void CreateFallbackTextures();
     void BindSubmeshTextures();
@@ -165,6 +168,14 @@ private:
     BoundingSphere mModelBounds = {};
     std::vector<SceneObject> mSceneObjects;
     Terrain mTerrain;
+    std::vector<unsigned int> mDirtyTerrainNodes;
+    XMFLOAT3 mBrushPoint = {0, 0, 0};
+    POINT mBrushCursor = {-1, -1};
+    float mBrushRadius = 12;
+    bool mBrushEnabled = true;
+    bool mBrushVisible = false;
+    bool mBrushRaise = false;
+    bool mBrushLower = false;
     std::vector<unsigned int> mVisibleSubmeshes;
     std::vector<unsigned int> mShadowSubmeshes;
     ComPtr<ID3D12Resource> mVertexBufferGPU;
