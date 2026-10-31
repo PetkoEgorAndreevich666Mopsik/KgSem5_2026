@@ -92,6 +92,12 @@ private:
     void DrawPostEffects(ID3D12GraphicsCommandList* cmdList);
 
     void UpdateCamera(float dt);
+    void ResetCamera();
+    void ChangeScene(int scene);
+    void SetAtmospherePreset(bool haze);
+    void InitializeSettingsUi();
+    void UpdateSettingsUi();
+    void DrawSettingsUi();
     void BuildSceneObjects();
 
     void FlushCommandQueue();
@@ -182,8 +188,6 @@ private:
     float mBrushRadius = 12;
     bool mBrushEnabled = false;
     bool mBrushVisible = false;
-    bool mBrushRaise = false;
-    bool mBrushLower = false;
     std::vector<unsigned int> mVisibleSubmeshes;
     std::vector<unsigned int> mShadowSubmeshes;
     ComPtr<ID3D12Resource> mVertexBufferGPU;
@@ -251,6 +255,7 @@ private:
     float mSunAzimuth = 0.35f;
     float mSunElevation = 0.6f;
     bool mAtmosphereOnObjects = true;
+    ComPtr<ID3D12DescriptorHeap> mUiSrvHeap;
 
     ComPtr<ID3D12Resource> mShadowMap;
     ComPtr<ID3D12DescriptorHeap> mShadowDsvHeap;

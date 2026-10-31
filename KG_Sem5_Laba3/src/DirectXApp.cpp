@@ -5,6 +5,9 @@
 #include "model_loader.h"
 #include "d3dUtil.h"
 #include "../h/d3dx12.h"
+#include "imgui.h"
+#include "imgui_impl_dx12.h"
+#include "imgui_impl_win32.h"
 
 #include <Windows.h>
 #include <windowsx.h>
@@ -26,6 +29,8 @@
 
 using namespace DirectX;
 using Microsoft::WRL::ComPtr;
+
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND, UINT, WPARAM, LPARAM);
 
 namespace {
 std::string ToLowerAscii(std::string s) {
@@ -374,6 +379,11 @@ DirectXApp::~DirectXApp() {
     if (mDevice) {
         FlushCommandQueue();
     }
+    if (ImGui::GetCurrentContext()) {
+        if (ImGui::GetIO().BackendRendererUserData) ImGui_ImplDX12_Shutdown();
+        if (ImGui::GetIO().BackendPlatformUserData) ImGui_ImplWin32_Shutdown();
+        ImGui::DestroyContext();
+    }
     if (mComInitialized) {
         CoUninitialize();
         mComInitialized = false;
@@ -395,6 +405,8 @@ bool DirectXApp::Initialize(HWND hwnd, unsigned int width, unsigned int height) 
     }
 
     BuildScene();
+
+    InitializeSettingsUi();
 
     mScreenViewport.TopLeftX = 0.0f;
     mScreenViewport.TopLeftY = 0.0f;
@@ -615,7 +627,7 @@ void DirectXApp::OnResize(unsigned int width, unsigned int height) {
 void DirectXApp::BuildScene() {
     FlushCommandQueue();
     mDirtyTerrainNodes.clear();
-    mBrushVisible = mBrushRaise = mBrushLower = false;
+    mBrushVisible = false;
     mVisibleSubmeshes.clear();
     mShadowSubmeshes.clear();
     mLastVisibleObjectCount = 0;
@@ -658,9 +670,7 @@ void DirectXApp::LoadModels() {
         }
         mShadowSubmeshes = mTerrain.Select(BoundingFrustum(), {}, false, false);
         mModelBounds = BoundingSphere(XMFLOAT3(0, 32, 0), 370);
-        mEyePos = XMFLOAT3(0, 90, -300);
-        mYaw = 0;
-        mPitch = -0.05f;
+        ResetCamera();
         return;
     }
     const std::string path = mCurrentScene == 1 ? "../assets/Earth.fbx" : "../assets/sponza.obj";
@@ -697,9 +707,7 @@ void DirectXApp::LoadModels() {
         }
     }
     mModelBounds = BoundingSphere(XMFLOAT3(0, offsetY, 0), targetRadius);
-    mEyePos = mCurrentScene == 1 ? XMFLOAT3(0, 3, -10) : XMFLOAT3(0, 0, 0);
-    mYaw = mCurrentScene == 2 ? XM_PIDIV2 : 0.0f;
-    mPitch = mCurrentScene == 1 ? -0.08f : 0.0f;
+    ResetCamera();
 }
 
 void DirectXApp::BuildSceneObjects() {
@@ -732,7 +740,7 @@ void DirectXApp::BuildGeometryBuffers() {
 void DirectXApp::UpdateTerrainBrush(const XMMATRIX& view, const XMMATRIX& proj, float dt) {
     mBrushVisible = false;
     mTerrain.SetBrushRegion({}, 0);
-    if (mCurrentScene != 0 || !mBrushEnabled || GetForegroundWindow() != mHwnd) return;
+    if (mCurrentScene != 0 || !mBrushEnabled || GetForegroundWindow() != mHwnd || ImGui::GetIO().WantCaptureMouse) return;
     POINT cursor;
     if (!GetCursorPos(&cursor) || !ScreenToClient(mHwnd, &cursor)) return;
     mBrushCursor = cursor;
@@ -746,8 +754,10 @@ void DirectXApp::UpdateTerrainBrush(const XMMATRIX& view, const XMMATRIX& proj, 
     XMStoreFloat3(&direction, XMVector3Normalize(farPoint - nearPoint));
     mBrushVisible = mTerrain.Raycast(mEyePos, direction, mBrushPoint);
     if (mBrushVisible) mTerrain.SetBrushRegion(mBrushPoint, mBrushRadius);
-    if (mBrushVisible && mBrushRaise != mBrushLower) {
-        const float amount = (mBrushRaise ? 12.0f : -12.0f) * std::clamp(dt, 0.0f, 0.05f);
+    const bool raise = ImGui::IsMouseDown(ImGuiMouseButton_Left);
+    const bool lower = ImGui::IsMouseDown(ImGuiMouseButton_Right);
+    if (mBrushVisible && raise != lower) {
+        const float amount = (raise ? 12.0f : -12.0f) * std::clamp(dt, 0.0f, 0.05f);
         mDirtyTerrainNodes = mTerrain.ApplyBrush(mBrushPoint, mBrushRadius, amount, mSceneMesh);
     }
 }
@@ -1289,6 +1299,7 @@ void DirectXApp::CreatePostProcessResources() {
 }
 
 void DirectXApp::UpdateCamera(float dt) {
+    if (GetForegroundWindow() != mHwnd || ImGui::GetIO().WantCaptureKeyboard) return;
     const float baseSpeed = mCurrentScene == 0 ? 45.0f : 5.0f;
     const float moveSpeed = (GetAsyncKeyState(VK_SHIFT) & 0x8000) ? baseSpeed * 3.5f : baseSpeed;
 
@@ -1322,8 +1333,10 @@ void DirectXApp::UpdateCamera(float dt) {
 }
 
 void DirectXApp::Update(const GameTimer& gt) {
+    UpdateSettingsUi();
     UpdateCamera(gt.DeltaTime());
-    if (GetForegroundWindow() == mHwnd) {
+    const bool keyboardEnabled = GetForegroundWindow() == mHwnd && !ImGui::GetIO().WantCaptureKeyboard;
+    if (keyboardEnabled) {
         const auto held = [](int key) { return (GetAsyncKeyState(key) & 0x8000) != 0 ? 1.0f : 0.0f; };
         const float dt = gt.DeltaTime();
         mRayleighScale = std::clamp(mRayleighScale + (held(VK_OEM_6) - held(VK_OEM_4)) * dt, 0.0f, 5.0f);
@@ -1334,18 +1347,18 @@ void DirectXApp::Update(const GameTimer& gt) {
     const XMFLOAT3 sunDirection(std::sin(mSunAzimuth) * std::cos(mSunElevation),
         std::sin(mSunElevation), std::cos(mSunAzimuth) * std::cos(mSunElevation));
     mLights[0].Direction = XMFLOAT3(-sunDirection.x, -sunDirection.y, -sunDirection.z);
-    const bool brushKey = GetForegroundWindow() == mHwnd && (GetAsyncKeyState('B') & 0x8000) != 0;
+    const bool brushKey = keyboardEnabled && (GetAsyncKeyState('B') & 0x8000) != 0;
     if (brushKey && !mBWasDown) {
         mBrushEnabled = !mBrushEnabled;
-        mBrushRaise = mBrushLower = false;
+        mBrushVisible = false;
     }
     mBWasDown = brushKey;
 
-    if (GetAsyncKeyState('3') & 0x8000) mDebugViewMode = 1;
-    if (GetAsyncKeyState('4') & 0x8000) mDebugViewMode = 2;
-    if (GetAsyncKeyState('5') & 0x8000) mDebugViewMode = 3;
-    const bool cull = (GetAsyncKeyState('8') & 0x8000) != 0;
-    const bool lod = (GetAsyncKeyState('9') & 0x8000) != 0;
+    if (keyboardEnabled && (GetAsyncKeyState('3') & 0x8000)) mDebugViewMode = 1;
+    if (keyboardEnabled && (GetAsyncKeyState('4') & 0x8000)) mDebugViewMode = 2;
+    if (keyboardEnabled && (GetAsyncKeyState('5') & 0x8000)) mDebugViewMode = 3;
+    const bool cull = keyboardEnabled && (GetAsyncKeyState('8') & 0x8000) != 0;
+    const bool lod = keyboardEnabled && (GetAsyncKeyState('9') & 0x8000) != 0;
     if (cull && !mCWasDown) mFrustumCullingEnabled = !mFrustumCullingEnabled;
     if (lod && !mOWasDown) mTerrainLodEnabled = !mTerrainLodEnabled;
     mCWasDown = cull;
@@ -1356,21 +1369,11 @@ void DirectXApp::Update(const GameTimer& gt) {
         mCurrentFps = mFrameCount / mFpsTimer;
         mFrameCount = 0;
         mFpsTimer = 0;
-        std::array<unsigned int, 5> counts = {};
-        if (mCurrentScene == 0)
-            for (auto patch : mVisibleSubmeshes) ++counts[mTerrain.Nodes()[patch].level];
         std::wostringstream title;
         const wchar_t* sceneName = mCurrentScene == 0 ? L"Terrain" : (mCurrentScene == 1 ? L"Earth" : L"Sponza");
-        title << sceneName << L" | FPS " << int(mCurrentFps)
-            << std::fixed << std::setprecision(2)
-            << L" | Rayleigh " << mRayleighScale << L" | Mie " << std::setprecision(3) << mMieCoefficient * 1000.0f << L" /km"
-            << L" | Sun " << int(XMConvertToDegrees(mSunAzimuth)) << L"," << int(XMConvertToDegrees(mSunElevation))
-            << L" | Objects " << (mAtmosphereOnObjects ? L"ON" : L"OFF")
-            << L" | F6:Clean F7:Haze F8:Objects []:Rayleigh -+:Mie Arrows:Sun";
+        title << sceneName << L" | FPS " << int(mCurrentFps);
         if (mCurrentScene == 0) {
-            title << L" | Patches " << mLastVisibleObjectCount << L" | Culled " << mTerrain.Culled()
-                << L" | LOD " << (mTerrainLodEnabled ? L"ON" : L"OFF") << L" | Levels ";
-            for (auto count : counts) title << count << L" ";
+            title << L" | Patches " << mLastVisibleObjectCount << L" | Culled " << mTerrain.Culled();
         } else {
             title << L" | Draws " << mLastDrawCallCount;
         }
@@ -1834,6 +1837,7 @@ void DirectXApp::Draw(const GameTimer& gt) {
     mCommandList->ClearRenderTargetView(rtv, clearColor, 0, nullptr);
     mCommandList->OMSetRenderTargets(1, &rtv, TRUE, nullptr);
     DrawPostEffects(mCommandList.Get());
+    DrawSettingsUi();
 
     auto bbToPresent = CD3DX12_RESOURCE_BARRIER::Transition(
         CurrentBackBuffer(),
@@ -1853,12 +1857,21 @@ void DirectXApp::Draw(const GameTimer& gt) {
 }
 
 LRESULT DirectXApp::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+    if (ImGui::GetCurrentContext()) {
+        ImGui_ImplWin32_WndProcHandler(hwnd, msg, wParam, lParam);
+        const auto& io = ImGui::GetIO();
+        if ((io.WantCaptureMouse && msg >= WM_MOUSEFIRST && msg <= WM_MOUSELAST)
+            || (io.WantCaptureKeyboard && msg >= WM_KEYFIRST && msg <= WM_KEYLAST)) {
+            if (io.WantCaptureMouse) mBrushVisible = false;
+            if (msg == WM_MOUSEMOVE) mLastMousePos = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
+            return 0;
+        }
+    }
     switch (msg) {
     case WM_KEYDOWN:
         if ((lParam & (1LL << 30)) == 0) {
             if (wParam == VK_F6 || wParam == VK_F7) {
-                mRayleighScale = 1.0f;
-                mMieCoefficient = wParam == VK_F6 ? 2e-6f : 0.0006f;
+                SetAtmospherePreset(wParam == VK_F7);
                 return 0;
             }
             if (wParam == VK_F8) {
@@ -1867,12 +1880,7 @@ LRESULT DirectXApp::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
         }
         if ((lParam & (1LL << 30)) == 0 && wParam >= VK_NUMPAD1 && wParam <= VK_NUMPAD3) {
-            const int scene = static_cast<int>(wParam - VK_NUMPAD1);
-            if (scene != mCurrentScene) {
-                mCurrentScene = scene;
-                mDebugViewMode = 1;
-                BuildScene();
-            }
+            ChangeScene(static_cast<int>(wParam - VK_NUMPAD1));
             return 0;
         }
         break;
@@ -1880,26 +1888,13 @@ LRESULT DirectXApp::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     case WM_RBUTTONDOWN:
     case WM_MBUTTONDOWN:
         mBrushCursor = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
-        if (mCurrentScene == 0 && mBrushEnabled) {
-            if (msg == WM_LBUTTONDOWN) mBrushRaise = true;
-            if (msg == WM_RBUTTONDOWN) mBrushLower = true;
-        }
         mLastMousePos.x = GET_X_LPARAM(lParam);
         mLastMousePos.y = GET_Y_LPARAM(lParam);
-        SetCapture(mHwnd);
-        return 0;
-
-    case WM_LBUTTONUP:
-    case WM_RBUTTONUP:
-    case WM_MBUTTONUP:
-        if (msg == WM_LBUTTONUP) mBrushRaise = false;
-        if (msg == WM_RBUTTONUP) mBrushLower = false;
-        if (!mBrushRaise && !mBrushLower) ReleaseCapture();
         return 0;
 
     case WM_CAPTURECHANGED:
     case WM_KILLFOCUS:
-        mBrushRaise = mBrushLower = mBrushVisible = false;
+        mBrushVisible = false;
         return 0;
 
     case WM_MOUSEWHEEL:

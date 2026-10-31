@@ -7,12 +7,25 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(ASSIMP_DIR "C:/assimp/assimp-6.0.5")
 
+add_library(imgui STATIC
+        third_party/imgui/imgui.cpp
+        third_party/imgui/imgui_draw.cpp
+        third_party/imgui/imgui_tables.cpp
+        third_party/imgui/imgui_widgets.cpp
+        third_party/imgui/backends/imgui_impl_win32.cpp
+        third_party/imgui/backends/imgui_impl_dx12.cpp
+)
+target_include_directories(imgui PUBLIC third_party/imgui third_party/imgui/backends)
+target_compile_definitions(imgui PRIVATE UNICODE _UNICODE NOMINMAX WIN32_LEAN_AND_MEAN)
+target_link_libraries(imgui PUBLIC d3d12 dxgi d3dcompiler dwmapi imm32)
+
 set(SRC_FILES
         src/model_loader.cpp
         src/Terrain.cpp
         src/main.cpp
         src/Window.cpp
         src/DirectXApp.cpp
+        src/SettingsUI.cpp
         src/RenderingSystem.cpp
         src/GBuffer.cpp
         src/DDSTextureLoader.cpp
@@ -67,6 +80,7 @@ target_compile_definitions(CG_Sem2 PRIVATE
 
 target_link_directories(CG_Sem2 PRIVATE ${ASSIMP_DIR}/build/lib/Debug ${ASSIMP_DIR}/build/contrib/zlib/Debug)
 target_link_libraries(CG_Sem2 PRIVATE
+        imgui
         assimp-vc143-mtd.lib
         zlibstaticd.lib
         d3d12.lib
@@ -78,7 +92,7 @@ target_link_libraries(CG_Sem2 PRIVATE
 )
 
 if(MSVC)
-    target_compile_options(CG_Sem2 PRIVATE /W4 /EHsc)
+    target_compile_options(CG_Sem2 PRIVATE /W4 /EHsc /utf-8)
 endif()
 
 set_source_files_properties(${SHADER_FILES} PROPERTIES HEADER_FILE_ONLY TRUE)
