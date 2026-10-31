@@ -87,8 +87,8 @@ void DirectXApp::UpdateSettingsUi() {
                 if (ImGui::SliderFloat("Mie (1/km)", &mie, 0.0f, 2.0f, "%.3f")) mMieCoefficient = mie / 1000.0f;
                 ImGui::Checkbox("Aerial perspective", &mAtmosphereOnObjects);
                 ImGui::SeparatorText("Sun");
-                ImGui::SliderAngle("Azimuth", &mSunAzimuth, -180.0f, 180.0f, "%.1f°");
-                ImGui::SliderAngle("Elevation", &mSunElevation, XMConvertToDegrees(0.02f), XMConvertToDegrees(1.5f), "%.1f°");
+                ImGui::SliderAngle("Azimuth", &mSunAzimuth, 0.0f, 360.0f, "%.1f°");
+                ImGui::SliderAngle("Elevation", &mSunElevation, 0.0f, 360.0f, "%.1f°");
                 ImGui::EndTabItem();
             }
             if (ImGui::BeginTabItem("Scene")) {

@@ -35,7 +35,8 @@ float3 AtmosphereTransmittance(Atmosphere medium, float distance)
 float3 SunIrradiance(Atmosphere medium)
 {
     float mass = OpticalMass(medium.SunDirection.y);
-    return medium.SunIntensity * exp(-(medium.Rayleigh * 8400.0f + medium.Mie * 1250.0f) * mass);
+    return medium.SunIntensity * exp(-(medium.Rayleigh * 8400.0f + medium.Mie * 1250.0f) * mass)
+        * smoothstep(-0.02f, 0.0f, medium.SunDirection.y);
 }
 
 float3 SurfaceInScattering(Atmosphere medium, float cosine, float distance)

@@ -55,7 +55,7 @@ set(SHADER_FILES
         src/lighting.hlsl
         src/particles.hlsl
         src/post_effects.hlsl
-        src/atmosphere.hlsli
+        src/atmosphere.hlsl
 )
 
 add_executable(CG_Sem2 WIN32

@@ -8,7 +8,7 @@ Texture2D gBrdfLut : register(t6);
 SamplerState gLinearClamp : register(s0);
 SamplerComparisonState gShadowSampler : register(s1);
 
-#include "atmosphere.hlsli"
+#include "atmosphere.hlsl"
 
 cbuffer PassConstants : register(b0)
 {

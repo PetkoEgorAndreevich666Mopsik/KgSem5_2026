@@ -4,7 +4,7 @@ Texture2D gNormalTex : register(t2);
 Texture2D gDepthTex : register(t3);
 SamplerState gLinearClamp : register(s0);
 
-#include "atmosphere.hlsli"
+#include "atmosphere.hlsl"
 
 cbuffer PostConstants : register(b0)
 {
@@ -115,8 +115,13 @@ float4 PS_PostEffects(VSOut input) : SV_Target
     medium.SunDirection = gSunDirection;
     medium.SunIntensity = 20.0f;
 
+    float sunCosine = dot(direction, gSunDirection);
+    float sunEdge = cos(0.75f * AtmospherePi / 180.0f);
+    float sunWidth = max(fwidth(sunCosine), 1e-6f);
+    float sunDisk = smoothstep(sunEdge - sunWidth, sunEdge + sunWidth, sunCosine);
+
     if (depth >= 1.0f)
-        color = AtmosphereSky(medium, direction);
+        color = AtmosphereSky(medium, direction) + SunIrradiance(medium) * sunDisk * 8.0f;
     else if (gAtmosphereOnObjects != 0)
         color = color * AtmosphereTransmittance(medium, distance)
             + SurfaceInScattering(medium, dot(direction, gSunDirection), distance);

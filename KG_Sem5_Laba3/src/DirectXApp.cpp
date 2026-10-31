@@ -1341,9 +1341,13 @@ void DirectXApp::Update(const GameTimer& gt) {
         const float dt = gt.DeltaTime();
         mRayleighScale = std::clamp(mRayleighScale + (held(VK_OEM_6) - held(VK_OEM_4)) * dt, 0.0f, 5.0f);
         mMieCoefficient = std::clamp(mMieCoefficient + (held(VK_OEM_PLUS) - held(VK_OEM_MINUS)) * 0.0005f * dt, 0.0f, 0.002f);
-        mSunAzimuth = std::remainder(mSunAzimuth + (held(VK_RIGHT) - held(VK_LEFT)) * dt * 0.6f, XM_2PI);
-        mSunElevation = std::clamp(mSunElevation + (held(VK_UP) - held(VK_DOWN)) * dt * 0.4f, 0.02f, 1.5f);
+        mSunAzimuth += (held(VK_RIGHT) - held(VK_LEFT)) * dt * 0.6f;
+        mSunElevation += (held(VK_UP) - held(VK_DOWN)) * dt * 0.4f;
     }
+    mSunAzimuth = std::remainder(mSunAzimuth, XM_2PI);
+    mSunElevation = std::remainder(mSunElevation, XM_2PI);
+    if (mSunAzimuth < 0.0f) mSunAzimuth += XM_2PI;
+    if (mSunElevation < 0.0f) mSunElevation += XM_2PI;
     const XMFLOAT3 sunDirection(std::sin(mSunAzimuth) * std::cos(mSunElevation),
         std::sin(mSunElevation), std::cos(mSunAzimuth) * std::cos(mSunElevation));
     mLights[0].Direction = XMFLOAT3(-sunDirection.x, -sunDirection.y, -sunDirection.z);
@@ -1470,7 +1474,8 @@ void DirectXApp::Update(const GameTimer& gt) {
 
         XMVECTOR lightDir = XMVector3Normalize(XMLoadFloat3(&mLights[0].Direction));
         XMVECTOR lightPos = XMVectorSubtract(center, XMVectorScale(lightDir, radius * 2.0f));
-        XMMATRIX lightView = XMMatrixLookAtLH(lightPos, center, XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f));
+        const XMVECTOR lightUp = XMVectorSet(std::cos(mSunAzimuth), 0.0f, -std::sin(mSunAzimuth), 0.0f);
+        XMMATRIX lightView = XMMatrixLookAtLH(lightPos, center, lightUp);
 
         const float texelWorldSize = (2.0f * radius) / static_cast<float>(kShadowMapSize);
         XMVECTOR centerLightSpace = XMVector3TransformCoord(center, lightView);

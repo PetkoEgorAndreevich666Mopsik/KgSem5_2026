@@ -39,7 +39,7 @@ int main(int argc, char** argv) {
         Check(device->CreateComputeShader(code->GetBufferPointer(), code->GetBufferSize(), nullptr, &shader));
 
         D3D11_BUFFER_DESC desc = {};
-        desc.ByteWidth = 6 * 4 * sizeof(float);
+        desc.ByteWidth = 7 * 4 * sizeof(float);
         desc.Usage = D3D11_USAGE_DEFAULT;
         desc.BindFlags = D3D11_BIND_UNORDERED_ACCESS;
         desc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
@@ -63,12 +63,12 @@ int main(int argc, char** argv) {
         context->CopyResource(readback.Get(), output.Get());
         D3D11_MAPPED_SUBRESOURCE mapped = {};
         Check(context->Map(readback.Get(), 0, D3D11_MAP_READ, 0, &mapped));
-        std::array<float, 24> values;
+        std::array<float, 28> values;
         std::copy_n(static_cast<const float*>(mapped.pData), values.size(), values.begin());
         context->Unmap(readback.Get(), 0);
         for (size_t i = 0; i < values.size(); ++i)
             if (values[i] != 1.0f) throw std::runtime_error("Atmosphere check failed: " + std::to_string(i));
-        std::cout << "Shaders compiled; 24 atmosphere checks passed on WARP\n";
+        std::cout << "Shaders compiled; 28 atmosphere checks passed on WARP\n";
     } catch (const std::exception& error) {
         std::cerr << error.what() << '\n';
         return 1;

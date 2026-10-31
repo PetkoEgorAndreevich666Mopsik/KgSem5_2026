@@ -1,4 +1,4 @@
-#include "../src/atmosphere.hlsli"
+#include "../src/atmosphere.hlsl"
 
 RWStructuredBuffer<float4> results : register(u0);
 
@@ -40,4 +40,21 @@ void CS_Test(uint3 id : SV_DispatchThreadID)
     results[5] = float4(all(AtmosphereSky(medium, float3(0, 1, 0)) == 0),
         all(SurfaceInScattering(medium, 1, 1000) == 0),
         all(AtmosphereTransmittance(medium, 1000) == 1), all(isfinite(SunIrradiance(medium))));
+
+    medium.Rayleigh = float3(6.95e-6f, 1.18e-5f, 2.44e-5f);
+    medium.Mie = 2e-6f;
+    bool orbitFinite = true;
+    for (int i = 0; i <= 24; ++i) {
+        float angle = i * AtmospherePi / 12.0f;
+        medium.SunDirection = float3(0, sin(angle), cos(angle));
+        orbitFinite = orbitFinite && all(isfinite(SunIrradiance(medium)))
+            && all(isfinite(AtmosphereSky(medium, float3(0, 1, 0))))
+            && all(SunIrradiance(medium) >= 0);
+    }
+    medium.SunDirection = float3(0, -1, 0);
+    bool nightDark = all(SunIrradiance(medium) == 0) && all(AtmosphereSky(medium, float3(0, 1, 0)) == 0);
+    medium.SunDirection = float3(0, 1, 0);
+    float3 zenithSun = SunIrradiance(medium);
+    medium.SunDirection = float3(0, 0, 1);
+    results[6] = float4(orbitFinite, nightDark, all(zenithSun > SunIrradiance(medium)), all(zenithSun > 0));
 }

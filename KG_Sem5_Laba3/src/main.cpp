@@ -6,6 +6,7 @@
 #include <string>
 #include <stdexcept>
 #include <memory>
+#include <filesystem>
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, PSTR, int nCmdShow) {
     Window window(hInstance, nCmdShow);
@@ -17,6 +18,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, PSTR, int nCmdShow) {
     auto app = std::make_unique<DirectXApp>();
 
     try {
+        wchar_t executablePath[MAX_PATH] = {};
+        const DWORD pathLength = GetModuleFileNameW(nullptr, executablePath, MAX_PATH);
+        if (pathLength == 0 || pathLength >= MAX_PATH)
+            throw std::runtime_error("Cannot determine executable directory");
+        std::filesystem::current_path(std::filesystem::path(executablePath).parent_path());
         if (!app->Initialize(window.GetHwnd(), static_cast<unsigned int>(window.GetWidth()), static_cast<unsigned int>(window.GetHeight()))) {
             MessageBox(window.GetHwnd(), L"Initialization failed.", L"Error", MB_OK | MB_ICONERROR);
             return 0;

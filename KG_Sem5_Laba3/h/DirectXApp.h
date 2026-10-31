@@ -253,7 +253,7 @@ private:
     float mRayleighScale = 1.0f;
     float mMieCoefficient = 2e-6f;
     float mSunAzimuth = 0.35f;
-    float mSunElevation = 0.6f;
+    float mSunElevation = 0.3f;
     bool mAtmosphereOnObjects = true;
     ComPtr<ID3D12DescriptorHeap> mUiSrvHeap;
 
