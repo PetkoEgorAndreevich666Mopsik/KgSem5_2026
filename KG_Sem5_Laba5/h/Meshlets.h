@@ -8,6 +8,7 @@
 struct Meshlet {
     uint32_t vertexOffset, vertexCount;
     uint32_t triangleOffset, triangleCount;
+    DirectX::XMFLOAT4 sphere;
 };
 
 struct MeshletRange {

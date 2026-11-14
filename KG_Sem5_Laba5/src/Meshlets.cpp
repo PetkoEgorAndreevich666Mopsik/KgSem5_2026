@@ -1,76 +1,75 @@
-    #include "Meshlets.h"
+#include "Meshlets.h"
 
-#include <algorithm>
+#include <DirectXCollision.h>
+#include <DirectXMesh.h>
 #include <array>
+#include <cstring>
 #include <stdexcept>
+#include <utility>
 
 static_assert(MESHLET_MAX_VERTICES <= 256 && MESHLET_MAX_TRIANGLES <= 256);
-static_assert(sizeof(Meshlet) == 16 && sizeof(Vertex) == 56);
+static_assert(sizeof(::Meshlet) == 32 && sizeof(Vertex) == 56);
 
 Meshlets BuildMeshlets(const MeshData& mesh) {
-    if (mesh.indices.size() > UINT32_MAX || mesh.vertices.size() > UINT32_MAX)
-        throw std::runtime_error("Meshlet input exceeds the 32-bit index range");
+    if (mesh.indices.empty() || mesh.indices.size() > UINT32_MAX || mesh.vertices.size() > UINT32_MAX)
+        throw std::runtime_error("Invalid model size for meshlets");
 
-    Meshlets result;
-    constexpr uint8_t unused = 255;
-    static_assert(MESHLET_MAX_VERTICES <= unused);
-    std::vector<uint8_t> localIndices(mesh.vertices.size(), unused);
-    size_t nextIndex = 0;
+    std::vector<DirectX::XMFLOAT3> positions;
+    positions.reserve(mesh.vertices.size());
+    for (const auto& vertex : mesh.vertices) positions.push_back(vertex.Position);
 
+    std::vector<uint32_t> indices;
+    indices.reserve(mesh.indices.size());
+    std::vector<std::pair<size_t, size_t>> subsets;
     for (const auto& submesh : mesh.submeshes) {
-        if (submesh.startIndexLocation != nextIndex || submesh.indexCount % 3 != 0 ||
-            submesh.indexCount > mesh.indices.size() - nextIndex)
+        const size_t start = indices.size();
+        if (submesh.startIndexLocation != start || submesh.indexCount % 3 != 0 ||
+            submesh.indexCount > mesh.indices.size() - start)
             throw std::runtime_error("Invalid submesh triangle range");
 
-        const auto first = static_cast<uint32_t>(result.blocks.size());
-        Meshlet block{};
-        const auto finishBlock = [&] {
-            if (!block.triangleCount) return;
-            for (uint32_t i = 0; i < block.vertexCount; ++i)
-                localIndices[result.vertices[block.vertexOffset + i]] = unused;
-            result.blocks.push_back(block);
-            block = {static_cast<uint32_t>(result.vertices.size()), 0,
-                     static_cast<uint32_t>(result.triangles.size()), 0};
-        };
-        block.vertexOffset = static_cast<uint32_t>(result.vertices.size());
-        block.triangleOffset = static_cast<uint32_t>(result.triangles.size());
-
-        const size_t end = nextIndex + submesh.indexCount;
-        for (; nextIndex < end; nextIndex += 3) {
-            std::array<uint32_t, 3> global{};
-            uint32_t newVertices = 0;
-            for (size_t corner = 0; corner < global.size(); ++corner) {
-                const auto index = int64_t(mesh.indices[nextIndex + corner]) + submesh.baseVertexLocation;
-                if (index < 0 || static_cast<uint64_t>(index) >= mesh.vertices.size())
-                    throw std::runtime_error("Meshlet triangle references an invalid vertex");
-                global[corner] = static_cast<uint32_t>(index);
-                if (localIndices[global[corner]] == unused &&
-                    std::find(global.begin(), global.begin() + corner, global[corner]) == global.begin() + corner)
-                    ++newVertices;
-            }
-
-            // shortcut: keep source triangle order, add adjacency clustering if vertex reuse becomes a bottleneck.
-            if (block.vertexCount + newVertices > MESHLET_MAX_VERTICES ||
-                block.triangleCount == MESHLET_MAX_TRIANGLES)
-                finishBlock();
-
-            uint32_t packed = 0;
-            for (size_t corner = 0; corner < global.size(); ++corner) {
-                auto& index = localIndices[global[corner]];
-                if (index == unused) {
-                    index = static_cast<uint8_t>(block.vertexCount++);
-                    result.vertices.push_back(global[corner]);
-                }
-                packed |= uint32_t(index) << (8 * corner);
-            }
-            result.triangles.push_back(packed);
-            ++block.triangleCount;
+        subsets.emplace_back(start / 3, submesh.indexCount / 3);
+        for (size_t i = start; i < start + submesh.indexCount; ++i) {
+            const auto index = int64_t(mesh.indices[i]) + submesh.baseVertexLocation;
+            if (index < 0 || static_cast<uint64_t>(index) >= mesh.vertices.size())
+                throw std::runtime_error("Meshlet triangle references an invalid vertex");
+            indices.push_back(static_cast<uint32_t>(index));
         }
-        finishBlock();
-        result.submeshes.push_back({first, static_cast<uint32_t>(result.blocks.size()) - first});
+    }
+    if (indices.size() != mesh.indices.size()) throw std::runtime_error("Submeshes did not cover the model");
+
+    std::vector<DirectX::Meshlet> blocks;
+    std::vector<uint8_t> vertexBytes;
+    std::vector<DirectX::MeshletTriangle> triangles;
+    std::vector<std::pair<size_t, size_t>> ranges(subsets.size());
+    const HRESULT hr = DirectX::ComputeMeshlets(indices.data(), indices.size() / 3, positions.data(), positions.size(),
+        subsets.data(), subsets.size(), nullptr, blocks, vertexBytes, triangles, ranges.data(),
+        MESHLET_MAX_VERTICES, MESHLET_MAX_TRIANGLES);
+    if (FAILED(hr)) throw std::runtime_error("DirectXMesh::ComputeMeshlets failed");
+    if (blocks.empty() || triangles.size() != indices.size() / 3)
+        throw std::runtime_error("DirectXMesh did not preserve all model triangles");
+
+    Meshlets result;
+    result.vertices.resize(vertexBytes.size() / sizeof(uint32_t));
+    std::memcpy(result.vertices.data(), vertexBytes.data(), vertexBytes.size());
+
+    result.blocks.reserve(blocks.size());
+    for (const auto& block : blocks) {
+        std::array<DirectX::XMFLOAT3, MESHLET_MAX_VERTICES> points;
+        for (uint32_t i = 0; i < block.VertCount; ++i)
+            points[i] = positions[result.vertices[block.VertOffset + i]];
+        DirectX::BoundingSphere sphere;
+        DirectX::BoundingSphere::CreateFromPoints(sphere, block.VertCount, points.data(), sizeof(points.front()));
+        result.blocks.push_back({block.VertOffset, block.VertCount, block.PrimOffset, block.PrimCount,
+                                 {sphere.Center.x, sphere.Center.y, sphere.Center.z, sphere.Radius}});
     }
 
-    if (nextIndex != mesh.indices.size() || result.blocks.empty())
-        throw std::runtime_error("Meshlets did not cover the model");
+    result.triangles.reserve(triangles.size());
+    for (const auto& triangle : triangles)
+        result.triangles.push_back(triangle.i0 | (triangle.i1 << 8u) | (triangle.i2 << 16u));
+
+    result.submeshes.reserve(ranges.size());
+    for (const auto& [first, count] : ranges)
+        result.submeshes.push_back({static_cast<uint32_t>(first), static_cast<uint32_t>(count)});
+
     return result;
 }

@@ -93,7 +93,8 @@ void RenderingSystem::BuildRootSignatures(ID3D12Device* device) {
             shaderModel.HighestShaderModel >= D3D_SHADER_MODEL_6_5) {
             for (UINT i = 0; i < 4; ++i)
                 params[5 + i].InitAsShaderResourceView(3 + i, 0, D3D12_SHADER_VISIBILITY_MESH);
-            params[9].InitAsConstants(1, 2, 0, D3D12_SHADER_VISIBILITY_MESH);
+            params[6].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+            params[9].InitAsConstants(3, 2, 0, D3D12_SHADER_VISIBILITY_AMPLIFICATION);
             desc.NumParameters = _countof(params);
             desc.Flags = D3D12_ROOT_SIGNATURE_FLAG_NONE;
             ThrowIfFailed(D3D12SerializeRootSignature(&desc, D3D_ROOT_SIGNATURE_VERSION_1, &serialized, &errors),
@@ -267,12 +268,14 @@ void RenderingSystem::BuildRootSignatures(ID3D12Device* device) {
 void RenderingSystem::BuildMeshPSOs(ID3D12Device* device, const D3D12_GRAPHICS_PIPELINE_STATE_DESC& geometry) {
     ComPtr<ID3D12Device2> streamDevice;
     ThrowIfFailed(device->QueryInterface(IID_PPV_ARGS(&streamDevice)), "Get mesh pipeline device");
-    ComPtr<ID3DBlob> mesh, pixel;
+    ComPtr<ID3DBlob> amplification, mesh, pixel;
+    ThrowIfFailed(D3DReadFileToBlob(L"mesh_amplification.cso", &amplification), "Read amplification shader");
     ThrowIfFailed(D3DReadFileToBlob(L"mesh_geometry.cso", &mesh), "Read mesh shader");
     ThrowIfFailed(D3DReadFileToBlob(L"mesh_pixel.cso", &pixel), "Read mesh pixel shader");
 
     struct {
         CD3DX12_PIPELINE_STATE_STREAM_ROOT_SIGNATURE rootSignature;
+        CD3DX12_PIPELINE_STATE_STREAM_SUBOBJECT<D3D12_SHADER_BYTECODE, D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_AS> as;
         CD3DX12_PIPELINE_STATE_STREAM_SUBOBJECT<D3D12_SHADER_BYTECODE, D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_MS> ms;
         CD3DX12_PIPELINE_STATE_STREAM_PS ps;
         CD3DX12_PIPELINE_STATE_STREAM_PRIMITIVE_TOPOLOGY topology;
@@ -285,6 +288,7 @@ void RenderingSystem::BuildMeshPSOs(ID3D12Device* device, const D3D12_GRAPHICS_P
         CD3DX12_PIPELINE_STATE_STREAM_SAMPLE_DESC samples;
     } stream;
     stream.rootSignature = mMeshRootSignature.Get();
+    stream.as = {amplification->GetBufferPointer(), amplification->GetBufferSize()};
     stream.ms = {mesh->GetBufferPointer(), mesh->GetBufferSize()};
     stream.ps = {pixel->GetBufferPointer(), pixel->GetBufferSize()};
     stream.topology = geometry.PrimitiveTopologyType;

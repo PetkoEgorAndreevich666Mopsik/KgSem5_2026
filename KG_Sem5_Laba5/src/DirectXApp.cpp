@@ -1940,11 +1940,15 @@ void DirectXApp::Draw(const GameTimer& gt) {
 
             if (meshCommandList) {
                 constexpr UINT maxGroups = 65535;
+                constexpr UINT maxMeshlets = maxGroups * AMPLIFICATION_GROUP_SIZE;
                 for (UINT offset = 0; offset < meshlets.count;) {
-                    const UINT groups = std::min(maxGroups, meshlets.count - offset);
-                    mCommandList->SetGraphicsRoot32BitConstant(9, meshlets.first + offset, 0);
+                    const UINT count = std::min(maxMeshlets, meshlets.count - offset);
+                    const UINT dispatch[] = {meshlets.first + offset, count,
+                                             mFrustumCullingEnabled && !mShowSingleMeshlet ? 1u : 0u};
+                    const UINT groups = (count + AMPLIFICATION_GROUP_SIZE - 1) / AMPLIFICATION_GROUP_SIZE;
+                    mCommandList->SetGraphicsRoot32BitConstants(9, _countof(dispatch), dispatch, 0);
                     meshCommandList->DispatchMesh(groups, 1, 1);
-                    offset += groups;
+                    offset += count;
                     ++mLastDrawCallCount;
                 }
             } else {

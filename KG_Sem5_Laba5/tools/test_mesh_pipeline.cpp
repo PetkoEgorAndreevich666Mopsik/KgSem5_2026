@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <dxgi1_6.h>
 #include <filesystem>
 #include <fstream>
@@ -51,6 +52,14 @@ void CheckMeshlets(const MeshData& mesh) {
                   block.vertexCount <= meshlets.vertices.size() - vertexOffset, "Invalid vertex count");
             Check(block.triangleCount > 0 && block.triangleCount <= MESHLET_MAX_TRIANGLES &&
                   block.triangleCount <= meshlets.triangles.size() - triangleOffset, "Invalid triangle count");
+            for (uint32_t i = 0; i < block.vertexCount; ++i) {
+                const auto index = meshlets.vertices[vertexOffset + i];
+                Check(index < mesh.vertices.size(), "Global index out of bounds");
+                const auto& p = mesh.vertices[index].Position;
+                const auto& s = block.sphere;
+                Check(std::hypot(p.x - s.x, p.y - s.y, p.z - s.z) <= s.w + 0.0001f,
+                      "Meshlet sphere missed a vertex");
+            }
             partialBlock |= block.vertexCount < MESHLET_MAX_VERTICES && block.triangleCount < MESHLET_MAX_TRIANGLES;
             for (uint32_t i = 0; i < block.triangleCount; ++i) {
                 const uint32_t triangle = meshlets.triangles[triangleOffset++];
