@@ -1,0 +1,4 @@
+#pragma once
+
+#define MESHLET_MAX_VERTICES 64
+#define MESHLET_MAX_TRIANGLES 126
