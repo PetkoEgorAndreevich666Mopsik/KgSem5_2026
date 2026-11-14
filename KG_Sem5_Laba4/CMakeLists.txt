@@ -107,10 +107,10 @@ if(NOT DXC_EXECUTABLE AND DXC_CANDIDATES)
     list(GET DXC_CANDIDATES 0 DXC_EXECUTABLE)
 endif()
 if(NOT DXC_EXECUTABLE)
-    message(FATAL_ERROR "DXC from the Windows SDK is required for Inline Ray Tracing")
+    message(FATAL_ERROR "DXC from the Windows SDK is required for the raytracing pipeline")
 endif()
 add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/rt_shadows.cso"
-    COMMAND "${DXC_EXECUTABLE}" -T cs_6_5 -E CS_Shadow -WX -O3
+    COMMAND "${DXC_EXECUTABLE}" -T lib_6_3 -WX -O3
         -Fo "${CMAKE_CURRENT_BINARY_DIR}/rt_shadows.cso" "${CMAKE_CURRENT_SOURCE_DIR}/src/rt_shadows.hlsl"
     DEPENDS src/rt_shadows.hlsl VERBATIM)
 add_custom_target(RTShaders DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/rt_shadows.cso")

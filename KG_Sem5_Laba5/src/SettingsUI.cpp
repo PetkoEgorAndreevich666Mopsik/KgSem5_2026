@@ -130,8 +130,7 @@ void DirectXApp::UpdateSettingsUi() {
                 if (mCurrentScene == MeshPipelineScene) {
                     ImGui::Text("Vertices: %zu   Triangles: %zu   Meshlets: %u",
                                 mSceneMesh.vertices.size(), mSceneMesh.indices.size() / 3, mMeshletCount);
-                    if (mStorageError.empty()) ImGui::TextUnformatted("Assets loaded via DirectStorage");
-                    else ImGui::TextWrapped("DirectStorage fallback: %s", mStorageError.c_str());
+                    if (!mStorageError.empty()) ImGui::TextWrapped("DirectStorage fallback: %s", mStorageError.c_str());
                     const bool supported = mRenderingSystem->GetMeshPSO(false) != nullptr;
                     if (!supported) ImGui::TextWrapped("Mesh Shader Tier 1 and Shader Model 6.5 required. Using indexed rendering.");
                     ImGui::BeginDisabled(!supported);

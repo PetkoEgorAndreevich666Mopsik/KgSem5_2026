@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.21)
 project(KG_Sem5_Laba5 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -17,6 +17,13 @@ FetchContent_Declare(directstorage
     DOWNLOAD_NAME directstorage.zip)
 FetchContent_MakeAvailable(directstorage)
 set(DIRECTSTORAGE_NATIVE "${directstorage_SOURCE_DIR}/native")
+
+FetchContent_Declare(directxmesh
+    URL https://codeload.github.com/microsoft/DirectXMesh/tar.gz/refs/tags/may2026
+    URL_HASH SHA256=f2fe15dbf59ea0b612a76b95e9cd3aa8542e42e67901c84fe23b88de09deca05
+    DOWNLOAD_NAME directxmesh.tar.gz)
+set(BUILD_TOOLS OFF)
+FetchContent_MakeAvailable(directxmesh)
 
 add_library(imgui STATIC
         third_party/imgui/imgui.cpp
@@ -102,6 +109,7 @@ target_compile_definitions(CG_Sem2 PRIVATE
 target_link_directories(CG_Sem2 PRIVATE ${ASSIMP_DIR}/build/lib/Debug ${ASSIMP_DIR}/build/contrib/zlib/Debug)
 target_link_libraries(CG_Sem2 PRIVATE
         imgui
+        DirectXMesh
         assimp-vc143-mtd.lib
         zlibstaticd.lib
         d3d12.lib
@@ -159,7 +167,7 @@ if(BUILD_TESTING)
     target_compile_definitions(MeshPipelineTests PRIVATE NOMINMAX WIN32_LEAN_AND_MEAN)
     target_link_directories(MeshPipelineTests PRIVATE "${ASSIMP_DIR}/build/lib/Debug" "${ASSIMP_DIR}/build/contrib/zlib/Debug")
     target_link_libraries(MeshPipelineTests PRIVATE assimp-vc143-mtd.lib zlibstaticd.lib
-        d3d12 dxgi d3dcompiler "${DIRECTSTORAGE_NATIVE}/lib/x64/dstorage.lib")
+        DirectXMesh d3d12 dxgi d3dcompiler "${DIRECTSTORAGE_NATIVE}/lib/x64/dstorage.lib")
     add_dependencies(MeshPipelineTests MeshShaders)
     foreach(mode geometry storage pso)
         add_test(NAME "MeshPipeline_${mode}" COMMAND MeshPipelineTests

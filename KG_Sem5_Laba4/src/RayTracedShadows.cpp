@@ -6,13 +6,21 @@
 
 using Microsoft::WRL::ComPtr;
 
+namespace {
+constexpr wchar_t RayGenExport[] = L"ShadowRayGen";
+constexpr wchar_t MissExport[] = L"ShadowMiss";
+constexpr wchar_t HitGroupExport[] = L"ShadowHitGroup";
+constexpr UINT64 TableAlignment = D3D12_RAYTRACING_SHADER_TABLE_BYTE_ALIGNMENT;
+constexpr UINT64 RecordSize = D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES;
+}
+
 bool RayTracedShadows::Initialize(ID3D12Device *device) {
     D3D12_FEATURE_DATA_D3D12_OPTIONS5 options = {};
-    D3D12_FEATURE_DATA_SHADER_MODEL model = {D3D_SHADER_MODEL_6_5};
+    D3D12_FEATURE_DATA_SHADER_MODEL model = {D3D_SHADER_MODEL_6_3};
     if (FAILED(device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS5, &options, sizeof(options))) ||
-        options.RaytracingTier < D3D12_RAYTRACING_TIER_1_1 ||
+        options.RaytracingTier < D3D12_RAYTRACING_TIER_1_0 ||
         FAILED(device->CheckFeatureSupport(D3D12_FEATURE_SHADER_MODEL, &model, sizeof(model))) ||
-        model.HighestShaderModel < D3D_SHADER_MODEL_6_5)
+        model.HighestShaderModel < D3D_SHADER_MODEL_6_3)
         return false;
     ThrowIfFailed(device->QueryInterface(IID_PPV_ARGS(&mDevice)), "Query DXR device failed");
     CD3DX12_DESCRIPTOR_RANGE input, output;
@@ -30,11 +38,40 @@ bool RayTracedShadows::Initialize(ID3D12Device *device) {
     ThrowIfFailed(device->CreateRootSignature(0, code->GetBufferPointer(), code->GetBufferSize(), IID_PPV_ARGS(&mRoot)),
                   "Create DXR root failed");
     ThrowIfFailed(D3DReadFileToBlob(L"rt_shadows.cso", &code), "Read RT shader failed; build the shaders target");
-    D3D12_COMPUTE_PIPELINE_STATE_DESC pipeline = {};
-    pipeline.pRootSignature = mRoot.Get();
-    pipeline.CS = {code->GetBufferPointer(), code->GetBufferSize()};
-    ThrowIfFailed(device->CreateComputePipelineState(&pipeline, IID_PPV_ARGS(&mPipeline)),
-                  "Create DXR pipeline failed");
+    D3D12_DXIL_LIBRARY_DESC library = {};
+    library.DXILLibrary = {code->GetBufferPointer(), code->GetBufferSize()};
+    D3D12_HIT_GROUP_DESC hitGroup = {};
+    hitGroup.HitGroupExport = HitGroupExport;
+    hitGroup.Type = D3D12_HIT_GROUP_TYPE_TRIANGLES;
+    hitGroup.ClosestHitShaderImport = L"ShadowClosestHit";
+    D3D12_RAYTRACING_SHADER_CONFIG shaderConfig = {sizeof(float), 2 * sizeof(float)};
+    D3D12_GLOBAL_ROOT_SIGNATURE globalRoot = {mRoot.Get()};
+    D3D12_RAYTRACING_PIPELINE_CONFIG pipelineConfig = {1};
+    const D3D12_STATE_SUBOBJECT subobjects[] = {
+        {D3D12_STATE_SUBOBJECT_TYPE_DXIL_LIBRARY, &library},
+        {D3D12_STATE_SUBOBJECT_TYPE_HIT_GROUP, &hitGroup},
+        {D3D12_STATE_SUBOBJECT_TYPE_RAYTRACING_SHADER_CONFIG, &shaderConfig},
+        {D3D12_STATE_SUBOBJECT_TYPE_GLOBAL_ROOT_SIGNATURE, &globalRoot},
+        {D3D12_STATE_SUBOBJECT_TYPE_RAYTRACING_PIPELINE_CONFIG, &pipelineConfig},
+    };
+    const D3D12_STATE_OBJECT_DESC pipeline = {D3D12_STATE_OBJECT_TYPE_RAYTRACING_PIPELINE, _countof(subobjects), subobjects};
+    ThrowIfFailed(mDevice->CreateStateObject(&pipeline, IID_PPV_ARGS(&mPipeline)), "Create DXR pipeline failed");
+
+    ComPtr<ID3D12StateObjectProperties> properties;
+    ThrowIfFailed(mPipeline.As(&properties), "Query DXR pipeline properties failed");
+    const wchar_t* records[] = {RayGenExport, MissExport, HitGroupExport};
+    BYTE table[_countof(records) * TableAlignment] = {};
+    for (size_t i = 0; i < _countof(records); ++i) {
+        const void* identifier = properties->GetShaderIdentifier(records[i]);
+        if (!identifier) throw std::runtime_error("DXR shader export is missing");
+        std::memcpy(table + i * TableAlignment, identifier, RecordSize);
+    }
+    mShaderTable = Buffer(sizeof(table), D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_HEAP_TYPE_UPLOAD);
+    void* mapped = nullptr;
+    const D3D12_RANGE noRead = {0, 0};
+    ThrowIfFailed(mShaderTable->Map(0, &noRead, &mapped), "Map DXR shader table failed");
+    std::memcpy(mapped, table, sizeof(table));
+    mShaderTable->Unmap(0, nullptr);
     return true;
 }
 
@@ -181,16 +218,26 @@ void RayTracedShadows::CreateViews(D3D12_CPU_DESCRIPTOR_HANDLE srv, D3D12_CPU_DE
 
 void RayTracedShadows::Trace(ID3D12GraphicsCommandList *command, D3D12_GPU_DESCRIPTOR_HANDLE gbuffer,
                              D3D12_GPU_DESCRIPTOR_HANDLE output, D3D12_GPU_VIRTUAL_ADDRESS pass) {
+    ComPtr<ID3D12GraphicsCommandList4> cmd;
+    ThrowIfFailed(command->QueryInterface(IID_PPV_ARGS(&cmd)), "Query DXR command list failed");
     auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(mMask.Get(), D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE,
                                                         D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
     command->ResourceBarrier(1, &barrier);
     command->SetComputeRootSignature(mRoot.Get());
-    command->SetPipelineState(mPipeline.Get());
+    cmd->SetPipelineState1(mPipeline.Get());
     command->SetComputeRootDescriptorTable(0, gbuffer);
     command->SetComputeRootShaderResourceView(1, mTlas->GetGPUVirtualAddress());
     command->SetComputeRootDescriptorTable(2, output);
     command->SetComputeRootConstantBufferView(3, pass);
-    command->Dispatch((mWidth + 7) / 8, (mHeight + 7) / 8, 1);
+    const auto table = mShaderTable->GetGPUVirtualAddress();
+    D3D12_DISPATCH_RAYS_DESC dispatch = {};
+    dispatch.RayGenerationShaderRecord = {table, RecordSize};
+    dispatch.MissShaderTable = {table + TableAlignment, RecordSize, RecordSize};
+    dispatch.HitGroupTable = {table + 2 * TableAlignment, RecordSize, RecordSize};
+    dispatch.Width = mWidth;
+    dispatch.Height = mHeight;
+    dispatch.Depth = 1;
+    cmd->DispatchRays(&dispatch);
     barrier = CD3DX12_RESOURCE_BARRIER::Transition(mMask.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
                                                    D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE);
     command->ResourceBarrier(1, &barrier);

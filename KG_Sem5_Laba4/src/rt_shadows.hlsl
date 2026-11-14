@@ -20,29 +20,41 @@ float3 World(float2 uv, float depth) {
     return p.xyz / p.w;
 }
 
+struct ShadowPayload {
+    float distance;
+};
+
+[shader("miss")]
+void ShadowMiss(inout ShadowPayload payload) {
+    payload.distance = -1;
+}
+
+[shader("closesthit")]
+void ShadowClosestHit(inout ShadowPayload payload, BuiltInTriangleIntersectionAttributes attributes) {
+    payload.distance = RayTCurrent();
+}
+
 float Hit(float3 origin, float3 direction) {
     RayDesc ray;
     ray.Origin = origin;
     ray.Direction = direction;
     ray.TMin = 0;
     ray.TMax = 100000;
-    RayQuery<RAY_FLAG_FORCE_OPAQUE | RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES> query;
-    query.TraceRayInline(gScene, RAY_FLAG_NONE, 255, ray);
-    while (query.Proceed()) {}
-    return query.CommittedStatus() == COMMITTED_TRIANGLE_HIT ? query.CommittedRayT() : -1;
+    ShadowPayload payload = { -1 };
+    TraceRay(gScene, RAY_FLAG_FORCE_OPAQUE, 255, 0, 0, 0, ray, payload);
+    return payload.distance;
 }
 
-[numthreads(8, 8, 1)]
-void CS_Shadow(uint3 id : SV_DispatchThreadID) {
-    uint width, height;
-    gMask.GetDimensions(width, height);
-    if (id.x >= width || id.y >= height) return;
+[shader("raygeneration")]
+void ShadowRayGen() {
+    uint2 id = DispatchRaysIndex().xy;
+    uint2 size = DispatchRaysDimensions().xy;
     float depth = gDepth[id.xy];
     if (depth >= 1 || gShadowSettings.x == 0) {
         gMask[id.xy] = float4(1, 1, 0, 0);
         return;
     }
-    float3 p = World((id.xy + 0.5) / float2(width, height), depth);
+    float3 p = World((id + 0.5) / float2(size), depth);
     float3 n = normalize(gNormal[id.xy].xyz * 2 - 1);
     float3 light = normalize(gShadowLight.xyz);
     float3 toEye = p - gEye;

@@ -5,6 +5,7 @@
 #include "model_loader.h"
 
 #include <algorithm>
+#include <array>
 #include <dxgi1_6.h>
 #include <filesystem>
 #include <fstream>
@@ -34,7 +35,14 @@ void CheckMeshlets(const MeshData& mesh) {
         const auto range = meshlets.submeshes[submeshIndex];
         Check(range.first == blockIndex && range.count <= meshlets.blocks.size() - blockIndex,
               "Invalid block range");
-        size_t sourceIndex = submesh.startIndexLocation;
+        std::vector<std::array<uint32_t, 3>> sourceTriangles, outputTriangles;
+        for (size_t i = submesh.startIndexLocation; i < size_t(submesh.startIndexLocation) + submesh.indexCount; i += 3) {
+            sourceTriangles.push_back({
+                static_cast<uint32_t>(int64_t(mesh.indices[i]) + submesh.baseVertexLocation),
+                static_cast<uint32_t>(int64_t(mesh.indices[i + 1]) + submesh.baseVertexLocation),
+                static_cast<uint32_t>(int64_t(mesh.indices[i + 2]) + submesh.baseVertexLocation)
+            });
+        }
         for (; blockIndex < size_t(range.first) + range.count; ++blockIndex) {
             const auto& block = meshlets.blocks[blockIndex];
             Check(block.vertexOffset == vertexOffset && block.triangleOffset == triangleOffset,
@@ -46,17 +54,19 @@ void CheckMeshlets(const MeshData& mesh) {
             partialBlock |= block.vertexCount < MESHLET_MAX_VERTICES && block.triangleCount < MESHLET_MAX_TRIANGLES;
             for (uint32_t i = 0; i < block.triangleCount; ++i) {
                 const uint32_t triangle = meshlets.triangles[triangleOffset++];
-                for (unsigned corner = 0; corner < 3; ++corner) {
+                std::array<uint32_t, 3> global{};
+                for (unsigned corner = 0; corner < global.size(); ++corner) {
                     const auto local = (triangle >> (8 * corner)) & 255;
                     Check(local < block.vertexCount, "Local index out of bounds");
-                    Check(sourceIndex < size_t(submesh.startIndexLocation) + submesh.indexCount, "Extra triangles");
-                    const auto source = int64_t(mesh.indices[sourceIndex++]) + submesh.baseVertexLocation;
-                    Check(meshlets.vertices[vertexOffset + local] == source, "Triangle or winding changed");
+                    global[corner] = meshlets.vertices[vertexOffset + local];
                 }
+                outputTriangles.push_back(global);
             }
             vertexOffset += block.vertexCount;
         }
-        Check(sourceIndex == size_t(submesh.startIndexLocation) + submesh.indexCount, "Missing submesh triangles");
+        std::sort(sourceTriangles.begin(), sourceTriangles.end());
+        std::sort(outputTriangles.begin(), outputTriangles.end());
+        Check(outputTriangles == sourceTriangles, "Triangle or winding changed");
     }
     Check(blockIndex == meshlets.blocks.size() && vertexOffset == meshlets.vertices.size() &&
           triangleOffset == meshlets.triangles.size(), "Unreferenced meshlet data");

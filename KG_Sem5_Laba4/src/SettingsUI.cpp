@@ -84,7 +84,7 @@ void DirectXApp::UpdateSettingsUi() {
         ImGui::TextDisabled("%.0f FPS", mCurrentFps);
         if (ImGui::BeginTabBar("SettingsTabs")) {
             if (ImGui::BeginTabItem("Shadows")) {
-                if (!mRtShadows.Supported()) ImGui::TextWrapped("DXR 1.1 unavailable. Using existing shadow maps.");
+                if (!mRtShadows.Supported()) ImGui::TextWrapped("DXR unavailable. Using existing shadow maps.");
                 ImGui::BeginDisabled(!mRtShadows.Supported());
                 const char* modes[] = {"No shadows", "Hard RT", "Soft RT"};
                 ImGui::Combo("Mode", &mShadowMode, modes, 3);

@@ -22,7 +22,8 @@ private:
                                                   D3D12_HEAP_TYPE heap = D3D12_HEAP_TYPE_DEFAULT);
     Microsoft::WRL::ComPtr<ID3D12Device5> mDevice;
     Microsoft::WRL::ComPtr<ID3D12RootSignature> mRoot;
-    Microsoft::WRL::ComPtr<ID3D12PipelineState> mPipeline;
+    Microsoft::WRL::ComPtr<ID3D12StateObject> mPipeline;
+    Microsoft::WRL::ComPtr<ID3D12Resource> mShaderTable;
     std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> mBlas;
     std::vector<unsigned int> mPatches;
     Microsoft::WRL::ComPtr<ID3D12Resource> mScratch, mTlas, mInstances, mMask;

@@ -27,7 +27,7 @@ int main() {
             if (factory->EnumAdapterByGpuPreference(i, DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE, IID_PPV_ARGS(&adapter)) == DXGI_ERROR_NOT_FOUND) break;
             if (SUCCEEDED(D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS(&device))) && shadows.Initialize(device.Get())) break;
         }
-        if (!shadows.Supported()) { std::cout << "SKIP: DXR 1.1 unavailable\n"; return 77; }
+        if (!shadows.Supported()) { std::cout << "SKIP: DXR unavailable\n"; return 77; }
         ComPtr<ID3D12InfoQueue> info;
         device.As(&info);
         ComPtr<ID3D12CommandQueue> queue;
